@@ -1,0 +1,257 @@
+IQ-TREE multicore version 1.6.12 for Linux 64-bit built Aug 15 2019
+Developed by Bui Quang Minh, Nguyen Lam Tung, Olga Chernomor,
+Heiko Schmidt, Dominik Schrempf, Michael Woodhams.
+
+Host:    c11-77 (AVX2, FMA3, 62 GB RAM)
+Command: /home/hennelly/bin/iqtree-1.6.12-Linux/bin/iqtree -s /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta -bb 1000 -nt AUTO -m TVM+F+R4
+Seed:    451315 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Tue Jul  7 17:09:22 2020
+Kernel:  AVX+FMA - auto-detect threads (24 CPU cores detected)
+
+Reading alignment file /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta ... Fasta format detected
+Alignment most likely contains DNA/RNA sequences
+Alignment has 34 sequences with 1190343 columns, 384241 distinct patterns
+243931 parsimony-informative, 174591 singleton sites, 771820 constant sites
+                                   Gap/Ambiguity  Composition  p-value
+   1  0_SRR8049189_sorted_proper_nodups   30.43%    failed      0.00%
+   2  0_BH123_sorted_proper_nodups         8.45%    failed      0.01%
+   3  0_BH124_sorted_proper_nodups         5.75%    passed     79.20%
+   4  0_BH126_sorted_proper_nodups         8.33%    failed      0.11%
+   5  0_BH127_sorted_proper_nodups        18.54%    failed      0.00%
+   6  0_BH1_sorted_proper_nodups          15.81%    failed      0.00%
+   7  0_BH4_sorted_proper_nodups          14.32%    failed      0.08%
+   8  0_BH6_sorted_proper_nodups           7.75%    failed      0.01%
+   9  0_SRR1518518_sorted_proper_nodups    7.22%    passed     85.85%
+  10  0_SRR2827600_sorted_proper_nodups    8.07%    passed     79.08%
+  11  0_SRR2827601_sorted_proper_nodups    6.71%    passed     63.03%
+  12  0_SRR2827603_sorted_proper_nodups    6.13%    passed     97.79%
+  13  0_SRR2827609_sorted_proper_nodups    8.09%    passed     92.01%
+  14  0_SRR2827611_sorted_proper_nodups   10.50%    failed      0.00%
+  15  0_SRR3574870_sorted_proper_nodups   19.99%    failed      0.00%
+  16  0_SRR5168998_sorted_proper_nodups    2.35%    failed      0.00%
+  17  0_SRR7107645_sorted_proper_nodups    8.66%    failed      1.02%
+  18  0_SRR7107646_sorted_proper_nodups    7.85%    failed      2.56%
+  19  0_SRR7107647_sorted_proper_nodups    7.36%    passed     88.02%
+  20  0_SRR7107786_sorted_proper_nodups    1.57%    failed      0.00%
+  21  0_SRR7107906_sorted_proper_nodups    2.26%    failed      0.00%
+  22  0_SRR7107907_sorted_proper_nodups    6.20%    failed      0.00%
+  23  0_SRR7107908_sorted_proper_nodups    2.79%    failed      0.00%
+  24  0_SRR7107909_sorted_proper_nodups    7.52%    passed     94.41%
+  25  0_SRR7107910_sorted_proper_nodups    2.59%    failed      0.00%
+  26  0_SRR7107911_sorted_proper_nodups    2.81%    failed      0.00%
+  27  0_SRR7107912_sorted_proper_nodups    2.07%    failed      0.00%
+  28  0_SRR7107913_sorted_proper_nodups    3.34%    failed      0.00%
+  29  0_SRR7976426_sorted_proper_nodups    6.65%    failed      0.00%
+  30  0_SRR8049193_sorted_proper_nodups    3.90%    failed      0.00%
+  31  0_SRR8049194_sorted_proper_nodups    6.97%    passed     83.53%
+  32  0_SRR8049197_sorted_proper_nodups    9.38%    failed      0.00%
+  33  0_SRR8066602_sorted_proper_nodups   10.69%    failed      0.00%
+  34  0_SRR8066605_sorted_proper_nodups   18.31%    failed      0.00%
+****  TOTAL                                8.51%  25 sequences failed composition chi2 test (p-value<5%; df=3)
+NOTE: minimal branch length is reduced to 0.000000084009 for long alignment
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 5.745 seconds
+Generating 1000 samples for ultrafast bootstrap (seed: 451315)...
+
+NOTE: 3160 MB RAM (3 GB) is required!
+Measuring multi-threading efficiency up to 24 CPU cores
+5 trees examined
+Threads: 1 / Time: 29.257 sec / Speedup: 1.000 / Efficiency: 100% / LogL: -8367837
+Threads: 2 / Time: 18.029 sec / Speedup: 1.623 / Efficiency: 81% / LogL: -8367837
+Threads: 3 / Time: 15.084 sec / Speedup: 1.940 / Efficiency: 65% / LogL: -8367837
+Threads: 4 / Time: 13.810 sec / Speedup: 2.118 / Efficiency: 53% / LogL: -8367837
+Threads: 5 / Time: 12.843 sec / Speedup: 2.278 / Efficiency: 46% / LogL: -8367837
+BEST NUMBER OF THREADS: 4
+
+Estimate model parameters (epsilon = 0.100)
+1. Initial log-likelihood: -6749679.725
+2. Current log-likelihood: -6248730.442
+3. Current log-likelihood: -6238193.687
+4. Current log-likelihood: -6237343.361
+5. Current log-likelihood: -6236984.104
+6. Current log-likelihood: -6236720.752
+7. Current log-likelihood: -6236530.944
+8. Current log-likelihood: -6236399.412
+9. Current log-likelihood: -6236309.435
+10. Current log-likelihood: -6236245.978
+11. Current log-likelihood: -6236203.116
+12. Current log-likelihood: -6236171.130
+13. Current log-likelihood: -6236145.178
+14. Current log-likelihood: -6236122.118
+15. Current log-likelihood: -6236101.034
+16. Current log-likelihood: -6236080.808
+17. Current log-likelihood: -6236060.792
+18. Current log-likelihood: -6236040.894
+19. Current log-likelihood: -6236021.247
+20. Current log-likelihood: -6236001.939
+21. Current log-likelihood: -6235982.770
+22. Current log-likelihood: -6235963.982
+23. Current log-likelihood: -6235944.762
+24. Current log-likelihood: -6235926.193
+25. Current log-likelihood: -6235907.567
+26. Current log-likelihood: -6235889.171
+27. Current log-likelihood: -6235870.944
+28. Current log-likelihood: -6235852.181
+29. Current log-likelihood: -6235833.478
+30. Current log-likelihood: -6235815.449
+31. Current log-likelihood: -6235796.970
+32. Current log-likelihood: -6235778.416
+33. Current log-likelihood: -6235759.777
+34. Current log-likelihood: -6235741.174
+35. Current log-likelihood: -6235722.503
+36. Current log-likelihood: -6235703.824
+37. Current log-likelihood: -6235685.242
+38. Current log-likelihood: -6235666.468
+39. Current log-likelihood: -6235647.567
+40. Current log-likelihood: -6235628.728
+41. Current log-likelihood: -6235609.947
+42. Current log-likelihood: -6235591.097
+43. Current log-likelihood: -6235572.112
+44. Current log-likelihood: -6235553.228
+45. Current log-likelihood: -6235534.280
+46. Current log-likelihood: -6235515.171
+47. Current log-likelihood: -6235496.676
+48. Current log-likelihood: -6235477.693
+49. Current log-likelihood: -6235458.597
+50. Current log-likelihood: -6235440.152
+51. Current log-likelihood: -6235421.255
+52. Current log-likelihood: -6235402.334
+53. Current log-likelihood: -6235384.051
+54. Current log-likelihood: -6235365.930
+55. Current log-likelihood: -6235348.007
+56. Current log-likelihood: -6235330.318
+57. Current log-likelihood: -6235312.901
+58. Current log-likelihood: -6235295.798
+59. Current log-likelihood: -6235279.045
+60. Current log-likelihood: -6235262.675
+61. Current log-likelihood: -6235246.734
+62. Current log-likelihood: -6235231.362
+63. Current log-likelihood: -6235216.508
+64. Current log-likelihood: -6235202.185
+65. Current log-likelihood: -6235188.439
+66. Current log-likelihood: -6235175.290
+67. Current log-likelihood: -6235162.767
+68. Current log-likelihood: -6235150.821
+69. Current log-likelihood: -6235139.669
+70. Current log-likelihood: -6235129.074
+71. Current log-likelihood: -6235119.345
+72. Current log-likelihood: -6235109.829
+73. Current log-likelihood: -6235101.304
+74. Current log-likelihood: -6235093.404
+75. Current log-likelihood: -6235086.216
+76. Current log-likelihood: -6235079.839
+77. Current log-likelihood: -6235073.766
+78. Current log-likelihood: -6235068.327
+79. Current log-likelihood: -6235063.397
+80. Current log-likelihood: -6235058.950
+81. Current log-likelihood: -6235054.898
+82. Current log-likelihood: -6235051.258
+83. Current log-likelihood: -6235048.083
+84. Current log-likelihood: -6235045.330
+85. Current log-likelihood: -6235042.830
+86. Current log-likelihood: -6235040.542
+87. Current log-likelihood: -6235038.649
+88. Current log-likelihood: -6235037.101
+89. Current log-likelihood: -6235035.771
+90. Current log-likelihood: -6235034.650
+91. Current log-likelihood: -6235033.672
+92. Current log-likelihood: -6235033.389
+93. Current log-likelihood: -6235032.596
+94. Current log-likelihood: -6235032.343
+95. Current log-likelihood: -6235031.838
+96. Current log-likelihood: -6235031.526
+97. Current log-likelihood: -6235031.230
+98. Current log-likelihood: -6235030.956
+99. Current log-likelihood: -6235030.697
+Optimal log-likelihood: -6235030.697
+Rate parameters:  A-C: 1.00517  A-G: 5.45627  A-T: 1.46107  C-G: 0.54180  C-T: 5.45627  G-T: 1.00000
+Base frequencies:  A: 0.206  C: 0.293  G: 0.295  T: 0.206
+Site proportion and rates:  (0.426,0.246) (0.372,0.262) (0.131,2.239) (0.071,7.119)
+Parameters optimization took 99 rounds (3662.013 sec)
+Computing ML distances based on estimated model parameters... 12.656 sec
+Computing BIONJ tree...
+0.002 seconds
+Log-likelihood of BIONJ tree: -6263519.361
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Generating 98 parsimony trees... 349.950 second
+Computing log-likelihood of 98 initial trees ... 567.922 seconds
+Current best score: -6235030.697
+
+Do NNI search on 20 best initial trees
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 1: -6231586.685
+Iteration 10 / LogL: -6234958.194 / Time: 1h:29m:48s
+Iteration 20 / LogL: -6232895.287 / Time: 1h:38m:59s
+Finish initializing candidate tree set (15)
+Current best tree score: -6231586.685 / CPU time: 2131.911
+Number of iterations: 20
+--------------------------------------------------------------------
+|               OPTIMIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Iteration 30 / LogL: -6233731.644 / Time: 1h:47m:8s (4h:22m:3s left)
+Iteration 40 / LogL: -6233185.646 / Time: 1h:54m:37s (2h:59m:7s left)
+Iteration 50 / LogL: -6232943.510 / Time: 2h:3m:6s (2h:8m:1s left)
+Log-likelihood cutoff on original alignment: -6231842.098
+Iteration 60 / LogL: -6232902.002 / Time: 2h:10m:35s (1h:30m:40s left)
+Iteration 70 / LogL: -6231618.810 / Time: 2h:18m:28s (1h:2m:9s left)
+Iteration 80 / LogL: -6238827.534 / Time: 2h:26m:45s (0h:38m:58s left)
+Iteration 90 / LogL: -6232925.159 / Time: 2h:33m:51s (0h:19m:0s left)
+Iteration 100 / LogL: -6232896.412 / Time: 2h:41m:12s (0h:1m:37s left)
+Log-likelihood cutoff on original alignment: -6231834.912
+NOTE: Bootstrap correlation coefficient of split occurrence frequencies: 0.997
+TREE SEARCH COMPLETED AFTER 102 ITERATIONS / Time: 2h:42m:37s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.010)
+1. Initial log-likelihood: -6231586.685
+2. Current log-likelihood: -6231586.422
+3. Current log-likelihood: -6231586.264
+4. Current log-likelihood: -6231586.046
+5. Current log-likelihood: -6231585.994
+6. Current log-likelihood: -6231585.812
+7. Current log-likelihood: -6231585.773
+8. Current log-likelihood: -6231585.601
+9. Current log-likelihood: -6231585.571
+10. Current log-likelihood: -6231585.411
+11. Current log-likelihood: -6231585.390
+12. Current log-likelihood: -6231585.238
+13. Current log-likelihood: -6231585.209
+Optimal log-likelihood: -6231585.196
+Rate parameters:  A-C: 1.00525  A-G: 5.46342  A-T: 1.45939  C-G: 0.54241  C-T: 5.46342  G-T: 1.00000
+Base frequencies:  A: 0.206  C: 0.293  G: 0.295  T: 0.206
+Site proportion and rates:  (0.430,0.253) (0.375,0.267) (0.125,2.316) (0.070,7.182)
+Parameters optimization took 13 rounds (230.868 sec)
+BEST SCORE FOUND : -6231585.196
+Creating bootstrap support values...
+Split supports printed to NEXUS file /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.splits.nex
+Total tree length: 0.980
+
+Total number of iterations: 102
+CPU time used for tree search: 22533.536 sec (6h:15m:33s)
+Wall-clock time used for tree search: 5949.866 sec (1h:39m:9s)
+Total CPU time used: 38010.164 sec (10h:33m:30s)
+Total wall-clock time used: 9988.897 sec (2h:46m:28s)
+
+Computing bootstrap consensus tree...
+Reading input file /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.splits.nex...
+34 taxa and 68 splits.
+Consensus tree written to /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.contree
+Reading input trees file /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.contree
+Log-likelihood of consensus tree: -6231585.195
+
+Analysis results written to: 
+  IQ-TREE report:                /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.iqtree
+  Maximum-likelihood tree:       /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.treefile
+  Likelihood distances:          /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.mldist
+
+Ultrafast bootstrap approximation results written to:
+  Split support values:          /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.splits.nex
+  Consensus tree:                /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.contree
+  Screen log file:               /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta.log
+
+Date and Time: Tue Jul  7 19:56:16 2020
