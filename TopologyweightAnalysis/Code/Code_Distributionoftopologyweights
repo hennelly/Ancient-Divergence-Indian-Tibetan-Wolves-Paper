@@ -1,0 +1,118 @@
+                     ########################################################################################
+                     ######################### Analysis and Figures the Topology Weights ####################
+                     ########################################################################################
+
+                    ##########################################
+                    ##### Step One: Load package and data ####
+                    ##########################################
+```{r}
+library(ggplot2)
+library(cowplot)
+library(scales)
+library (reshape)
+
+Note for this analysis: 
+
+#topo1 (Dhole  ((Indianwolf  Holarcticwolf)	Tibetanwolf));
+#topo2 (Dhole	((Indianwolf	Tibetanwolf)	Holarcticwolf));
+#topo3 (Dhole	(Indianwolf	(Holarcticwolf	Tibetanwolf)));
+  
+chrX <- read.csv ("output.weights_chrX_Dholeroot_March16_broadpop_normalised.csv", header=TRUE)
+```
+               
+                    ######################################################
+                    ##### Step Two: Normalize weights for topologies  ####
+                    ######################################################
+                    
+As according to Martin et al. 2017. Exploring evolutionary relationships across the genome using topology weighting. Genetics. I followed Simon Martin's 
+steps with normalizing weightings of topologies within his Github folder: https://github.com/simonhmartin/twisst
+
+```{r}
+weights <- read.csv ("output.weights_chr35_Dholeroot_March16_broad.csv" , header=TRUE)
+window_data = read.csv("WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_35.phyml.data.csv", header=TRUE)
+
+#normalise rows so weights sum to 1
+weights <- weights / apply(weights, 1, sum)
+write.csv (weights, "output.weights_chr35_Dholeroot_March16_broadpop_normalised.csv")
+```
+
+                    ###############################################################
+                    ##### Code for Figure of  Distribution of topology weights ####
+                    ###############################################################
+Figure S5. Continuous frequency distribution of three possible topology weights using 3 gray wolf taxa rooted with an 
+outgroup for (A) autosomes and (B) the X chromosome. Topology weights were estimated within 100-SNP windows using Twisst. 
+
+```{r}
+####################
+######### Autosomal dataset
+####################
+auto <- read.csv ("3topologies_autosomes_topologyweightandpositions.csv", header=TRUE)
+dat <- read.csv ("TOPO15_WHOLEGENOME.csv", header=TRUE) #final dataset for 15 topology weights across autosomes and X chromosome, with
+mean recombination rate within each window. 
+
+
+
+
+####################
+######### X chromosome dataset
+####################
+chrX <- read.csv ("3topologies_chrX_topologyweight_andstart.csv", header=TRUE)
+
+######### Adjust the column sin the autosomal dataset
+topology_10kb = auto[,c("topo1","topo2","topo3")]
+names(topology_10kb) = c("Top1","Top2","Top3")
+topology_10kb_melt=melt(topology_10kb)
+names(topology_10kb_melt)=c("Topology","value")
+
+write.csv (topology_10kb_melt, "3topologies_auto_topologyweight_andstart_ordered.csv")
+
+####################
+######### Adjust the columns in the autosomal dataset with start
+####################
+topology_10kb = auto[,c("topo1","topo2","topo3", "start", "chr")]
+names(topology_10kb) = c("Top1","Top2","Top3")
+topology_10kb_melt=melt(topology_10kb)
+names(topology_10kb_melt)=c("Topology","value")
+
+####################
+######### Plot #####
+####################
+#Autosomes
+dat <- read.csv ("FigureS5_3topologies_auto_topologyweight_andstart_ordered.csv", header=TRUE)
+pdf("Autosomes_distributionofweightsfor3topologies.pdf", width=15, height=4)
+ggplot(dat,aes(value, fill=Topology))+geom_histogram(binwidth=0.025,size=0.25, position = position_dodge2(preserve = "single", width=0.5))+xlab("Weight") + theme_classic()
+dev.off()
+
+
+
+#X chromosome
+
+dat <- read.csv ("FigureS5_3topologies_chrX_topologyweight_andstart.csv", header=TRUE)
+pdf("chrX_distributionofweightsfor3topologies.pdf", width=15, height=4)
+ggplot(dat,aes(Weight, fill=Topology))+geom_histogram(binwidth=0.025, colour = "black", size=0.25, position = position_dodge2(preserve = "single", width=0.5))+xlab("Weight") + theme_classic()
+dev.off()
+```
+
+                    #####################################################################################
+                    ##### Code for Figure of loess line for Recombination rate and Topology weights #####
+                    #####################################################################################
+                    
+                                      ##### Topology 3 of the 3 possible topologies #####
+```{r}
+dat2 <- read.csv ("CHRX_TOPOLOGY3_RECRATE_AUG27.csv", header=TRUE)
+dat2 <- dat[dat$chr == "chrX", ]
+
+pdf("Aug27_Topology3.pdf", height=4, width=19)
+x <- ggplot(dat2, aes(start, weight, fill= label)) + xlab("Position along chromosome") + theme_classic() + stat_smooth(geom = 'area', method = 'loess', span=0.002, alpha=0.4, color="black",size=0.25 ) + guides(fill=FALSE)
+x
+dev.off()
+````
+                                      ##### Topology 12 and 13 of the 15 possible topologies #####
+```{r}
+dat2 <- read.csv ("AUG27_topo12and13.csv", header=TRUE)
+
+pdf("Aug27_Topology12and13.pdf", height=4, width=19)
+x <- ggplot(dat2, aes(start, weight, fill=topo)) + xlab("Position along chromosome") + theme_classic() + stat_smooth(geom = 'area', method = 'loess', span=0.002, alpha=0.4, color="black",size=0.25 ) + guides(fill=FALSE)
+x
+dev.off()
+```
