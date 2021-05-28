@@ -1,0 +1,198 @@
+                     #############################################################################
+                     ######################### Additional Filtering Steps ########################
+                     #############################################################################
+                              Various useful filtering and quality checking scripts: 
+                                 - Inferring Depth from a Bam File
+                                 - Missingness per individual basis 
+                                 - Measuring relatedness with individuals
+                                 - Removing Individuals from the Dataset using vcftools
+                                 - Removing Individuals from the Dataset using plink
+                                 - Removing Paralogs from my VCF files
+                                 
+                                    ######################################
+                                    ######################################
+                                    ## Inferring Depth from a Bam File ###
+                                    ######################################
+                                    ######################################
+This isn't a filtering step, but it is very useful script! I can infer the average coverage for covered bases using an array. First, here's my file that indicates the 
+sample names: 
+```
+touch bamfiles.txt
+
+BH123
+BH124
+...
+...
+```
+
+Then I can write an array: 
+```
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+
+sample=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_split_one.txt)
+echo ${sample}
+
+module load samtools
+
+samtools depth /home/hennelly/projects/ZachSNPcalling/Feb272020/bamfiles/sorted/${sample}_sorted_proper_nodups.bam  |  awk '{sum+=$3} END { print "Average = ",sum/NR}' > /home/hennelly/projects/ZachSNPcalling/Feb272020/depth/depthfiles/depth${sample}.txt
+```
+
+                                    ############################################
+                                    ############################################
+                                    ## Missingness on a per-individual basis ###
+                                    ############################################
+                                    ############################################
+                                    
+I used vcftools to report the missingness on a per-indvidual basis. This will allow me to remove any indvidiuals that are missing a lot of data. 
+Directory: /home/hennelly/projects/Filtering/scripts/indmissingness.sh
+
+```
+vcftools --missing-indv  --gzvcf /home/hennelly/projects/IQtree/March132020/vcffiles/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss0.9_chrX_real.recode.vcf.gz
+```                                    
+                                    ##############################################
+                                    ##############################################
+                                    ## Measuring relatedness with individuals  ###
+                                    ##############################################
+                                    ##############################################      
+                                    
+This measures the relatedness of individuals, which has implications for downstream analyses, such as PCA and Structure.  I will be using plink --genomes flag to
+measure the coefficient of relatedness. 
+```
+module load plink 
+
+plink --genomes --file /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/All_Combined_minQ30_noindels.vcf --const-fid 0
+```
+                                   
+                                    ###########################################################
+                                    ###########################################################
+                                    ## Removing Individuals from the Dataset using vcftools ###
+                                    ###########################################################
+                                    ###########################################################
+```
+module load vcftools
+
+vcftools --remove-indv 0_SRR1061818_sorted_proper_nodups  --remove-indv 0_SRR1061963_sorted_proper_nodups --remove-indv 0_SRR1061964_sorted_proper_nodups --vcf /home/hennelly/projects/IQtree/March132020/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.vcf --out /home/hennelly//projects/IQtree/March132020/databases/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.vcf --recode --recode-INFO-all
+```
+                                    
+                                    ########################################################
+                                    ########################################################
+                                    ## Removing Individuals from the Dataset using plink ###
+                                    ########################################################
+                                    ########################################################                                    
+```
+plink --file /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes --remove mylist_dogs.txt --make-bed --dog --allow-extra-chr
+```                                    
+ 
+                                    #######################################
+                                    #######################################
+                                    ## Filtering Minor Allele Frequency ###
+                                    #######################################
+                                    #######################################
+### Setting up my datasets 
+The minor allele frequency (MAF) is the frequency at which the second most common allele occurs in a given population. It is important to keep in mind the sample number for 
+each population and the type of species for each population. 
+
+For example, if I have only one Dhole in the population and removing alleles that occur once in the population, then I will be removing heterozygotes from 
+Dholes (n=1 allele in the population in the Dhole).
+
+The MAF will matter significantly for PMSC and any demographic modeling statistics (since rare alleles are more prelevant in a large and expanding population). 
+
+I think I will need to have different datasets: 
+
+1.) Only gray wolves. This will be used to run F3, Admixture, and PCA. This will include a minor allele count of 3. 
+
+2.) Gray wolves and Dogs. This will be used to run F3, Admixture, and PCA. This will include a minor allele count of 3. 
+
+3.) Gray wolves, dogs, and coyote relatives. This will be used to run Admixture and PCA. This will include a minor allele count of 1 (since I have only 1 red wolf, 1 eastern wolf, and 1 coyote). 
+### Script for Minor Allele count
+
+I will be using vcftools --mac flag, which include only sites with Minor Allele Count greater than or equal to the "--mac" value. Allele count is simply the number of times that allele appears over all individuals at that site.
+
+CODE: 
+```
+module load vcftools
+
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs.recode.vcf --mac 3 --out /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3 --recode --recode-INFO-all
+```
+                                                                                                  
+                                    ##########################################
+                                    ##########################################
+                                    ## Removing Paralogs from my VCF files ###
+                                    ##########################################
+                                    ########################################## 
+                                    
+I will remove paralogs by looking at the distribution of depth per site, in three groups: samples from 5-10x, samples from 10-20x, and samples from 20-30x. 
+
+                           ##### Step One: Infer mean depth per site across all individuals #####
+To remove paralogous alignment from the sequence dataset, we can look at the mean depth of coverage per site for all individuals and remove the regions that have more than a 95 percentile compared to the coverage mean. 
+
+Here's the code for obtaining the mean depth per site across all individuals
+```
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/All_Combined_minQ30_noindels.vcf --out /home/hennelly/projects/Filtering/results/All_Combined_minQ30_noindels_depth --site-depth
+```                                  
+                                    
+                            ###### Step Two: Plot mean depth per site to determine cut off #######
+Once I have the mean depth per site for the WGS data (.ldepth file), I can now plot a histogram. I will first save the .ldepth file as a .txt file using cp command, then I will be using R: 
+
+```{r}
+                ###############################################
+                 #######   Step One: Read in the data #########
+                ###############################################
+                
+  > dat3 <- read.table ("All_Combined_minQ30_noindels_depth.ldepth.txt", sep="\t", header=TRUE)  
+  > summary (dat3)
+  
+             #########################################################
+             ###### Step Two: set up boundaries for intervals/bins ###
+             #########################################################
+             
+  > breaks <- c(0,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800,850,
+  900,950,1000,1200,1400, 1600,1800, 2000, 2500, 3000, 3500,4000, 5000, 6000, 7000, 
+  10000,11000)
+  
+                #################################################
+                ### Step Three: set labels for intervals/bins ###
+                #################################################
+                
+  > labels <- c("<50", "50-100)","100-150)","150-200)", "200-250)","250-300),", "300-350)",
+  "350-400)","400-450),", "450-500)", "500-550)", "550-600)", "600-650)", "650-700)",
+  "700-750)", "750-800)", "800-850)", "850-900),", "900-950)", "950-1000", "1000-1200)",
+  "1200-1400)", "1400-1600", "1600-1800)", "1800-2000)", "2000-2500)", "2500-3000)",
+  "3000-3500","3500-4000)", "4000-5000)", "5000-6000)",
+  "6000-7000)", "7000-10000)",  ">=10000")
+  
+                #################################################
+                ### Step Four: bucketing data points into bins ##
+                #################################################
+                
+  > x=dat3[,3]
+  > bins3 <- cut(x, breaks, include.lowest = T, right=FALSE, labels=labels)
+  > summary(bins3)
+  
+                #################################################
+                ############# Step Five: Plotting ###############
+                #################################################
+                
+  > pdf("persitedepth_for_samples_06032020.pdf")
+  > plot(bins3, main="Depth per Site for WGS samples", 
+  ylab="amount of sites within depth bin "
+  ,col="bisque")
+  > dev.off() 
+        #########################################################
+```
+
+To view the graph, I will need to move it into my computer.
+
+After looking viewing this graph, I decided to cut off at 850 overall mean max depth. I also got a second opinion by Ben Sacks on cutting it off at 850 mean depth
+per site for all individuals. 
+                                    
+                        ######## Step Three: Filter by setting mean max depth per site  #######
+Next, I will filter by the mean max depth per site to include only sites with mean depth values (over all individuals) less than or equal to a specific value. 
+
+Code for filtering by depth: 
+
+```
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/chrX/chrX_FinalSample_minQ30_noindels.recode.vcf --out /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/chrX/chrX_FinalSample_minQ30_noindels_noparalogs --maxDP 850 --recode --recode-INFO-all
+```                                   
+
+
