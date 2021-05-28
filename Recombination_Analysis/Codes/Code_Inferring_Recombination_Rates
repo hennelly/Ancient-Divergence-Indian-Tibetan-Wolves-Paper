@@ -1,0 +1,306 @@
+                     ####################################################################################
+                     ######################### Analysis for recombination rates #########################
+                     ####################################################################################
+
+For the recombination rate file, I downloaded the files from this github repository (https://github.com/auton1/dog_recomb). 
+The recombination rate files are from Auton et al. 2013 (https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1003984)
+
+                                    #######################################
+                                    #######################################
+                                    ## Preparing the files for analysis ###
+                                    #######################################
+                                    #######################################
+
+I ended up doing some of the preparation in excel... First, I downloaded the recombination rate files from the github repository, 
+which have the starting position and recombination rate (cM/Mb). In excel, I then created a label column indicating the label "recrate". For example, 
+the columns are: 
+
+"startingposition" "label" "recrate(cM/Mb)"
+96072 recrate 6.9
+96717 recrate 7.8
+96786 recrate 5.6
+... ... ... 
+
+Next, I copy and pasted the starting position of the topologies in the "startingposition" column and added a label next to the starting positions
+called "topology". After sorting by starting position, I end up getting a file like: 
+
+"startingposition" "label" "recrate(cM/Mb)"
+96071 topology
+96072 recrate 6.9
+96717 recrate 7.8
+96786 recrate 5.6
+97786 topology 
+97786 recrate 4.6
+... ... ...
+
+In this file above, I can now indicate the recomination rates that fall within each topology window. To be able to take the average 
+of the recombination rates within these topology windows, I need to create a seperate label for each window. I created a new column
+called "category" and used the excel format below: 
+
+
+"startingposition" "label" "recrate(cM/Mb)" "category
+96071 topology 1
+96072 recrate 6.9 =IF(C3="",E2+1,E2)
+96717 recrate 7.8
+96786 recrate 5.6
+97786 topology 
+97786 recrate 4.6
+... ... ...
+
+Which resulted in:
+
+"startingposition" "label" "recrate(cM/Mb)" "category
+96071 topology 1
+96072 recrate 6.9 1
+96717 recrate 7.8 1
+96786 recrate 5.6 1
+97786 topology 2
+97786 recrate 4.6 2
+... ... ...
+
+###########################################
+## Step Two: Take averages of Rec Rate###
+###########################################
+                                    
+Now I can take the average of the recombination rates within each of these windows, using R. First, I need to check which cases there are
+that have no recombination rates between them. 
+
+```
+library(data.table)
+dat <- read.csv ("chrX_recrate_topology_labels_withlabels.csv", header=TRUE)
+dat$category <- as.factor(dat$category)
+library(data.table)
+dt <- data.table(newdata)
+recrate <- dt[,list(mean=mean(recrate),sd=sd(recrate)),by=category]
+write.csv(recrate, "averagedrecrate_chr1.csv") ###write the recombination rates
+### Then subset for just the topology weights:
+newdat <- subset(dat, label != "recrate")
+write.csv (newdat, "chr8_topologyNEW.csv") ###write the topology weights
+```
+
+After this, I now have a list of the recombination rate averages and the topology weights.
+
+################################################################
+## Step Three: Sorting to remove double topology weights ###
+################################################################
+
+In excel, I then add the category column of the recombination rates underneath the category column of the topology weights. I also
+add a "mean" column with the averaged recombination rates next to the categories of recombination rate. Then I sort. 
+
+Which resulted in:
+
+"startingposition" "label" "recrate(cM/Mb)" "category" "mean"
+96071 topology 1
+96072 recrate 6.9 1
+96717 topology 7.8 2
+96786 recrate 5.6 2
+97786 topology 3
+97786 recrate 4.6 3
+97786 topology 4
+97786 topology 5
+97786 recrate 4.6 5
+... ... ...
+
+Next, I add a TRUE and FALSE statement: 
+
+"startingposition" "label" "recrate(cM/Mb)" "category" "mean" "TF"
+96071 topology 1 =IF(G$1 = G$2, TRUE, FALSE)
+96072 recrate 6.9 1 FALSE
+96717 topology 7.8 2 TRUE
+96786 recrate 5.6 2 FALSE
+97786 topology 3 TRUE
+97786 recrate 4.6 3 FALSE
+97786 topology 4 FALSE
+97786 topology 5 TRUE
+97786 recrate 4.6 5 TRUE
+... ... ...
+
+
+Then I add a "FIX" column: 
+
+"startingposition" "label" "recrate(cM/Mb)" "category" "mean" "TF" "FIX"
+96071 topology 1 TRUE fine
+96072 recrate 6.9 1 FALSE =IF(H2=H3, "FIX","fine")
+96717 topology 7.8 2 TRUE fine
+96786 recrate 5.6 2 FALSE fine
+97786 topology 3 TRUE fine
+97786 recrate 4.6 3 FALSE FIX
+97786 topology 4 FALSE FIX
+97786 topology 5 TRUE fine
+97786 recrate 4.6 5 TRUE fine
+... ... ...
+
+Finally, in R, I can remove the FIX rows: 
+```
+dat <- read.csv ("chr8_topologyNEW.csv", header=TRUE)
+newdat <- subset(dat, FIX != "FIX")
+###Since the rows are mismatched, I need to save each one individually, then combine them in a seperate file:
+topology <- subset(newdat, start != "NA")
+write.csv (topology, "chr8_topologyNEWUP.csv") #write topology
+recrate <- subset(newdat, mean != "NA")
+write.csv (recrate, "chr8_recrateNEWUP.csv") #write recombination rates
+```
+
+                                    ###############################################################################################
+                                    ###############################################################################################
+                                    ## Plotting 3 topology weight vs. log(recombination rate) across Autosomes and X chromosome ###
+                                    ###############################################################################################
+                                    ###############################################################################################
+                                    
+I reorganized the dataset in excel to have all topology weights in a column with a seperate label of topo1, topo2, topo3. The goal is to plot a scatterplot with 
+recombination rate vs. topology weight with a linear trend line.
+
+Datasets: 
+/home/hennelly/projects/Twisst/March132020/RecRateanalysis/FINISHED_AUTOSOMES.csv #calculating topology 3 vs. recombination regression analysis
+/iCloudDrive/UC-Davis/Divergence wolves March 4th/Twisst/Analysis Rec Rate 3 topologies/Analysis Rec Rate 3 topologies/WG_topoAll_10rows #averaged 10 rows and log(recombinationrate) for autosomes and X chromosome
+#Need to place the above excel file into GitHub drive.
+
+I first log transformed the recombination rate means. Specifically, I added 1 to each recombination rate mean value and then took the log in excel. Next, did several 
+different plots with plotting each topology seperately, resulting in 3 graphs, and then with combining Topology1 and Topology3's values (so just adding them together) in 
+excel and plotting. 
+
+Then I took the average of 5 rows across the dataset to reduce the noise and amount of points in R: 
+```
+df<- read.csv ("chrX_means.csv", header=TRUE)
+n <- 5 #calculate mean every 5 rows
+df_mean <- aggregate(df,list(rep(1:(nrow(df)%/%n+1),each=n,len=nrow(df))),mean)[-1]; #calculate mean for every 5 rows
+write.csv (df_mean, "chrX_mean_5rows.csv")
+```
+Now I can reorder the data to add together Topo1 and Topo3 with making new labels for Topo1and3 and Topo2. Then I can plot the scatterplot.
+```
+### Plotting each topology in seperate facet for log(fecombination rate) vs. topology weight over the X chromosome
+dat <- read.csv ("chrX_log_5rows_comb.csv", header=TRUE)
+pdf("chrX_eachtopology_recrate_acrosspositions.pdf", width=20, height=7)
+ggplot(dat2, aes(x=recrate, y=weights)) + theme_classic() + geom_point(alpha=0.75, color="gray67", size=0.5) + geom_smooth(method = 'lm',  se = FALSE, color="red") 
++ xlab("recombination rate (cM/Mb)") + ylab("topology weight") + facet_wrap(~ label,ncol = 2) 
+dev.off()
+```
+Finally, I can run a linear regression on the relationship between log(recombination rate) and the topology weights in r: 
+```
+dat <- read.csv ("chrX_log_5rows_comb.csv", header=TRUE)
+dat2 <- dat[dat$label == "topoAandC", ] #I can also subset for TopoB as well
+lm <- lm(weights~recrate, data=dat2)
+summary(lm)
+```
+
+Since the Autosomes dataset is so large, I needed to make the scatterplot in Farm. 
+
+Move to farm: 
+```
+rsync -avz -e "ssh -p 2022" --progress ~/Desktop/FINISHED_AUTOSOMES.csv hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Twisst/March132020/RecRateanalysis
+```
+In R on the farm: 
+```
+dat <- read.csv ("FINISHED_AUTOSOMES.csv",header=TRUE)
+dat2 <- dat[dat$label == "topoC", ]
+pdf("June30_topologyweight_recrate_autosomes_topo3.pdf")
+plot(dat2$mean, dat2$weight, pch=19, col = rgb(0, 0, 0, 0.01))
+lines(lowess(dat2$mean, dat2$weight), col="red", lwd=3)
+dev.off()
+```
+
+Bring in these files onto my local computer: 
+```
+scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Twisst/March132020/RecRateanalysis/June30_topologyweight_recrate_autosomes_topo3.pdf ~/Desktop
+```
+################################################
+  Plotting Autosomes and X chromosome together 
+################################################
+
+By calculating the mean of every 10 rows, I can plot both the X chromosome and autosomal dataset on my local computer in R. Using the mean for every 10 rows reduced the 
+noise in the final plot, which was useful to more clearly observe the pattern in the dataset. The p-value was about the same for using the 10 mean rows and the original full
+dataset. 
+
+```{r}
+df <- read.csv ("WG_topoAll.csv", header=TRUE) #read in data
+
+### Calculate mean of every 10 rows ###
+n <- 10 #calculate mean every 10 rows
+df_mean <- aggregate(df,list(rep(1:(nrow(df)%/%n+1),each=n,len=nrow(df))),mean)[-1]; #calculate mean 
+write.csv (df_mean, "chrX_mean_20rows.csv")
+
+dat <- read.csv ("WG_topoAll_10rows.csv", header=TRUE) #read in data
+
+### Plot scatterplot for autosomes and X chromosome ###
+pdf("WholeGenome_eachtopology_recrate_scatterplot_FINAL.pdf", width=5, height=5)
+dat <- read.csv ("WG_topoAll_10rows.csv", header=TRUE)
+ggplot(dat, aes(x=log.mean., y=weight)) + theme_classic() + geom_point(alpha=0.4, color="gray67", size=0.5) + geom_smooth(method = 'lm', se = FALSE, color="red") + xlab("recombination rate (cM/Mb)") + ylab("topology weight") + facet_wrap(autovschrX ~ label,ncol = 3) 
+dev.off()
+```
+
+
+                                    ########################################################################################
+                                    ########################################################################################
+                                    ## Plotting topology weight vs. recombination rate across Autosomes and X chromosome ###
+                                    ########################################################################################
+                                    ########################################################################################
+
+###############################################
+## Plotting count above 0.8 topology weights ##
+###############################################
+
+dataset
+code
+
+#############################################################################################
+## Plotting topology weight above 0.5 and reocmbination rate for the 15 Topology analysis  ##
+#############################################################################################
+
+First, I need to subset the dataset to include weights above 0.5. I had to do this individually for each topology and then combine
+them in excel
+```
+dat <- read.csv ("TOPO15_WHOLEGENOME.csv", header=TRUE)
+dat2 <- dat[dat$topo15 > 0.5, ]
+write.csv (dat2, "topo15above0.5.csv")
+```
+Next, I subsetted for recombination rate: 
+```
+dat <- read.csv ("TOPO15_WG_ordered.csv", header=TRUE)
+dat2 <- dat[dat$mean < 0.2, ]
+pdf("Topology15andRecrate_below0.2.pdf", height=5, width=9)
+p <- ggplot(data=newdata, aes(x=label, y=weight)) + theme_classic() +  geom_jitter(alpha=0.1, color="black") + facet_wrap(~ autochrX, ncol=1) + stat_summary(fun.y= mean, fun.ymin=mean,fun.ymax=mean, geom = "point",
+width = .5, color = "red") + stat_summary(fun.data=mean_se, geom="errorbar", color="red")
+p
+dev.off()
+```
+
+#####################################################################################################
+## Plotting topology weight above 0.5 and reocmbination rate for the 15 Topology analysis bar plot ##
+#####################################################################################################
+
+The relative weights were calculated by by dividing the amount of highly weighted windows for each topology by the total amount of highly weighted windows across 15 topologies within each recombination rate partition. 
+Datasets: 
+/iCloudDrive/UC-Davis/Divergence wolves March 4th/Twisst/Analysis Rec Rate 3 topologies/Analysis Rec Rate 3 topologies/June30_recratecat_auto 
+/iCloudDrive/UC-Davis/Divergence wolves March 4th/Twisst/Analysis Rec Rate 3 topologies/Analysis Rec Rate 3 topologies/June30_recratecat_chrX
+
+###########################################
+### Step One: subset by topology weight ###
+###########################################
+
+First, I need to subset for highly weighted windows (>0.5 weight). Since each topology of 15 is in each column, I had to do this individually for each topology and then combine
+them in excel
+```{r}
+dat <- read.csv ("TOPO15_WHOLEGENOME.csv", header=TRUE)
+dat2 <- dat[dat$topo15 > 0.5, ]
+write.csv (dat2, "topo15above0.5.csv")
+```
+########################################################
+### Step Two: subset by recombination rate threshold ###
+########################################################
+
+Next, I subsetted for each recombination rate threshold and tallied up how many windows were in each subset for each of the 15 topologies
+```{r}
+dat <- read.csv ("TOPO15_WG_ordered.csv", header=TRUE)
+dat2 <- dat[dat$mean < 0.2, ]
+nrow(dat2)
+```
+########################################################
+### Step Three: Plotting Autosomes and X chromosome ###
+########################################################
+Plotting
+```{r}
+dat <- read.csv ("June30_recratecat_chrX.csv", header=TRUE)
+pdf("Topology15andRecrate_bargraph_auto.pdf", height=3, width=9)
+ggplot(dat, aes(fill=recrate, y=relative, x=topology)) + geom_bar(position="dodge", stat="identity", colour="black") + theme_classic() + scale_fill_brewer(palette="set2")
+dev.off()
+```
