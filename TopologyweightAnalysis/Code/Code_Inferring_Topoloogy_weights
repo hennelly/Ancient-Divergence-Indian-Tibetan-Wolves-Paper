@@ -1,0 +1,218 @@
+                     ###########################################################################################
+                     ######################### Inferring Topology Weights across the Genome ####################
+                     ###########################################################################################
+Topology weighting is a method to quantify relationships between taxa to explore how relationships vary across the genome using population genomic data. The method 
+Twisst (topology weighting by iterative sampling of sub-trees) computes the weightings by iteratively sampling sub-trees from the full tree and checking their topology (Martin et al. 2017)
+
+S.H. Martin, S.M. Van Belleghem, Exploring evolutionary relationships across the genome using topology weighting. Genetics 206: 429-438 (2017). 
+
+                    #########################################
+                    ##### Step One: Phasing the vcf file ####
+--------------------#########################################----------------------------------------------------------------------------------------------------
+#### Split the vcf file to each chromosome 
+Splitting each chromosome will make it computationally easier to run each step. Before this step, I also made sure to keep only biallelic alleles from my dataset. 
+```
+for i in {1..38};
+
+do vcftools --gzvcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Final_Samples_minQ30_noindels_noparalogs.recode.vcf.gz --chr chr$i  --recode --recode-INFO-all --max-missing 1 --out  /home/hennelly/projects/Twisst/March132020/databases/Final_Samples_minQ30_noindels_noparalogs_maxmiss1_$i;
+done
+```
+#### Phase the genome using Beagle: 
+```
+java -jar /home/hennelly/Pakistan_Graywolf_Genomics/Twisst/scripts/beagle.13Mar20.38e.jar nthreads=1 gt="Final_Samples_minQ30_noindels_noparalogs_maxmiss1_1.recode.vcf" out="Final_Samples_minQ30_noindels_noparalogs_maxmiss1_1_phased" map="mark4_cleaned_chr1.cf3.1.sorted.txt"
+```
+
+
+                    #############################################################
+                    ##### Step Two: Convert vcf file to geno file for Twisst ####
+--------------------#############################################################--------------------------------------------------------------------------------
+Next, Simon Martin provides the parseVCF command, which generates the genotype format from a vcf file. This was a difficult command to get running, as I was
+having a problem is numpy. I ended up creating a new conda environment and install python version 2.7, with using the ete3 conda environment I made:                     
+```
+############################ 
+### Step One: Make a new environment with a specific python version
+############################ 
+conda create -c etetoolkit -n ete3 python=2.7 ete numpy
+############################ 
+### Step Two: Activate conda environment 
+############################ 
+conda activate ete3
+############################ 
+### Step Three: Install etetoolkit ete3
+############################ 
+conda install -c etetoolkit ete3
+############################ 
+### Step Four: Might need to install etechain
+############################ 
+### Tested to see if parseVCF.py worked: 
+python /home/hennelly/bin/genomics_general/VCF_processing/parseVCF.py -h
+############################ 
+```                    
+
+Now I can run the ParseVCF script. First, I need to ```conda activate ete3```, then I can do:
+
+```
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chrlist.txt | cut -f1)
+echo ${number}
+ 
+ conda activate ete3
+ 
+python /home/hennelly/bin/genomics_general/VCF_processing/parseVCF.py -i /home/hennelly/projects/Twisst/March132020/finalphased/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_${number}.vcf.gz | gzip > /home/hennelly/projects/Twisst/March132020/Genofiles2/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_${number}.geno.gz
+```                    
+                    ##############################################################
+                    ##### Step Four: Infer trees across windows of the genome ####
+                    ##############################################################                
+ To run Twisst, I need to infer trees across windows of the genome and use the output trees.gz file to infer topology weights, using phylm 
+ ```
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chrlist.txt | cut -f1)
+echo ${number}
+
+module load phyml
+
+python /home/hennelly/bin/genomics_general/phylo/phyml_sliding_windows.py -T 1 -g /home/hennelly/projects/Twisst/March132020/genofiles/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_${number}.geno.gz --outgroup SRR8049189_sorted_proper_nodups -w 100 --windType sites --prefix /home/hennelly/projects/Twisst/March132020/phymltrees/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_${number}.phyml --model GTR
+```
+                    ########################################
+                    ##### Step Five: Topology weighting ####
+                    ######################################## 
+The last script is to infer the topology weights using the trees.gz file and the twisst script. 
+
+First though, I need to make a populations file that should be tab-ed between the number and name of population. Here's one detailed population file. Note: 
+There an A and B for each individual sample because I phased the dataset. 
+
+```
+BH123_sorted_proper_nodups_A   Indianwolf
+BH123_sorted_proper_nodups_B   Indianwolf
+BH124_sorted_proper_nodups_A   Indianwolf
+BH124_sorted_proper_nodups_B    Indianwolf
+BH126_sorted_proper_nodups_A    Indianwolf
+BH126_sorted_proper_nodups_B    Indianwolf
+BH6_sorted_proper_nodups_A    Indianwolf
+BH6_sorted_proper_nodups_B    Indianwolf
+SRR1518518_sorted_proper_nodups_A    WestAsianwolf
+SRR1518518_sorted_proper_nodups_B    WestAsianwolf
+SRR2827600_sorted_proper_nodups_A    CentralAsianwolf
+SRR2827600_sorted_proper_nodups_B    CentralAsianwolf
+SRR2827601_sorted_proper_nodups_A    CentralAsianwolf
+SRR2827601_sorted_proper_nodups_B    CentralAsianwolf
+SRR2827603_sorted_proper_nodups_A    CentralAsianwolf
+SRR2827603_sorted_proper_nodups_B    CentralAsianwolf
+SRR2827609_sorted_proper_nodups_A    CentralAsianwolf
+SRR2827609_sorted_proper_nodups_B    CentralAsianwolf
+SRR2827611_sorted_proper_nodups_A    CentralAsianwolf
+SRR2827611_sorted_proper_nodups_B    CentralAsianwolf
+SRR7107645_sorted_proper_nodups_A   CentralAsianwolf
+SRR7107645_sorted_proper_nodups_B   CentralAsianwolf
+SRR7107646_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107646_sorted_proper_nodups_B    CentralAsianwolf
+SRR7107647_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107647_sorted_proper_nodups_B    CentralAsianwolf
+SRR7107786_sorted_proper_nodups_A    NorthAmericanwolf
+SRR7107786_sorted_proper_nodups_B    NorthAmericanwolf
+SRR7107906_sorted_proper_nodups_A    Tibetanwolf
+SRR7107906_sorted_proper_nodups_B    Tibetanwolf
+SRR7107907_sorted_proper_nodups_A    Tibetanwolf
+SRR7107907_sorted_proper_nodups_B    Tibetanwolf
+SRR7107908_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107908_sorted_proper_nodups_B CentralAsianwolf
+SRR7107909_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107909_sorted_proper_nodups_B    CentralAsianwolf
+SRR7107910_sorted_proper_nodups_A    Tibetanwolf
+SRR7107910_sorted_proper_nodups_B    Tibetanwolf
+SRR7107911_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107911_sorted_proper_nodups_B    CentralAsianwolf
+SRR7107912_sorted_proper_nodups_A    Tibetanwolf
+SRR7107912_sorted_proper_nodups_B    Tibetanwolf
+SRR7107913_sorted_proper_nodups_A    CentralAsianwolf
+SRR7107913_sorted_proper_nodups_B    CentralAsianwolf
+SRR8049189_sorted_proper_nodups_A    Dhole
+SRR8049189_sorted_proper_nodups_B    Dhole
+SRR8049193_sorted_proper_nodups_A    WestAsianwolf
+SRR8049193_sorted_proper_nodups_B    WestAsianwolf
+SRR8049194_sorted_proper_nodups_A    WestAsianwolf
+SRR8049194_sorted_proper_nodups_B   WestAsianwolf
+SRR8049197_sorted_proper_nodups_A    NorthAmericanwolf
+SRR8049197_sorted_proper_nodups_B    NorthAmericanwolf
+SRR8066602_sorted_proper_nodups_A    NorthAmericanwolf
+SRR8066602_sorted_proper_nodups_B    NorthAmericanwolf
+SRR8066605_sorted_proper_nodups_A    NorthAmericanwolf
+SRR8066605_sorted_proper_nodups_B    NorthAmericanwolf
+```
+
+RUNNING TWISST  
+
+The last script is to infer the topology weights using the trees.gz file and the twisst script. I wrote an array to infer the topology weighting for
+each chromosome at the same time. 
+
+I ran two different versions -- one with specific populations (WestAsianwolf, NorthAmericanwolf, and CentralAsianwolf) and 
+another that is broad (just Holarctic wolf).
+
+```
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chrlist.txt | cut -f1)
+echo ${number}
+
+conda activate ete3
+
+python /home/hennelly/bin/twisst/twisst.py -t /home/hennelly/projects/Twisst/March132020/phymltrees/WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_${number}.phyml.trees.gz -w /home/hennelly/projects/Twisst/March132020/results/output.weights_chr${number}_Dholeroot_March16_specific.csv.gz -g Indianwolf -g NorthAmericanwolf -g CentralAsianwolf -g WestAsianwolf -g Tibetanwolf -g Dhole --method complete --groupsFile groupMarch16.tsv 
+```
+
+                    ##############################################################
+                    ##### Step Six: Outputs of Twisst and plotting the output ####
+                    ##############################################################
+The main data produced by Twisst is a weights file which has columns for each topology and their number of observations of that topology within each genealogy.
+Weights files produced by Twisst also contain initial comment lines specifying the topologies. 
+This looks like: ```output.weights_chr3_Dholeroot_March16_broadpop.csv.gz```
+
+
+The other data file that may be of interest is the window data. That is, the chromosome/scaffold and start and end positions for each of the regions or windows
+represented in the weights file. 
+This looks like: ```WolvesandDhole_minQ30_noindels_noparalogs_maxmiss1_biallelic_phased_5.phyml.data.tsv```                    
+                    
+I can format my results with these scripts: 
+```
+#####################
+# format the results
+#####################
+grep -v "^#" output.weights_chr1_Dholeroot_Feb2nd.csv > output.weights_chr1_Dholeroot_Feb2nd_cleaned.csv
+
+grep "^#" output.weights_chrchrX_Dholeroot_March16_broadpop.csv > output.weights_chrchrX_Dholeroot_March16_broadpop_cleaned.csv
+
+### I also need to save the .phyml.data.tsv as a text file
+
+*********Loop version************ 
+
+for i in {1..38};
+
+do 
+grep -v "^#" output.weights_chr${i}_Dholeroot_March16_broadpop.csv > output.weights_chr${i}_Dholeroot_March16_broadpop.csv;
+done
+```
+Then, I can bring in these files onto my local computer and normalize the topology weights in R. 
+
+                    ############################################################
+                    ##### Step Seven: Normalizing the Topology Weights in R ####
+                    ############################################################
+                    
+```{r}
+                    ##### Step One: Load package and data ####
+#### Load packages
+library(ggplot2)
+library(cowplot)
+library(scales)
+
+### Load data
+weights <- read.csv ("output.weights_chr1_Dholeroot_Feb2nd_cleaned.csv" , header=TRUE)
+window_data = read.csv("DholeandWolves_bestsamples_minQ30_noindels_noparalogs_maxmiss1_chr1_biallelicBEAGLE_phased.phyml.data.csv", header=TRUE)
+
+
+                    ##### Step Two: Normalize weights #####
+
+#normalise rows so weights sum to 1
+weights <- weights / apply(weights, 1, sum)
+write.csv (weights, "output.weights_chr1_Dholeroot_Feb2nd_normalised.csv")
+```{r}
+
+Next, I opened this normalised weights csv and windows csv in excel. I then created one csv file with the normalized topologies and its associated window coordinates.
+    
