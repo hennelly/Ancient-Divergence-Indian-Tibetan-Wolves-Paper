@@ -1,0 +1,59 @@
+                     #########################################################################################
+                     ######################### Analysis for Nuclear Phylogenetic Trees #######################
+                     #########################################################################################
+
+                                    #################################################
+                                    #################################################
+                                    ## Code for inferring the X chromosome phylogeny ###
+                                    #################################################
+                                    #################################################
+
+
+######################
+Extract only the X chromosome:
+######################
+```
+module load vcftools
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_maxmiss0.8.recode.vcf --chr X --out /home/hennelly/projects/IQtree/March132020/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_maxmiss0.8_chrX --recode --recode-INFO-all
+```
+
+                                    #################################################
+                                    ## Code for inferring the X chromosome phylogeny ###
+                                    #################################################
+                                    
+                                   
+##################################################
+Remove specific individuals from the chrX dataset
+##################################################
+```
+module load plink
+plink --file Final_Samples_minQ30_noindels_noparalogs_geno0.1_Xchr --remove mylist_nodogs_07082020.txt --dog --allow-extra-chr --recode vcf --out Wildcanids_nodogs_minQ30_noindels_noparalogs_geno0.1_Xchr
+```
+
+#####################################
+Convert vcf file to mvf file
+#####################################
+```
+module load bio3
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertVCF2MVF --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wildcanids_nodogsredIndianwolf_minQ30_noindels_noparalogs_geno0.1_chrX.vcf --out /home/hennelly/projects/IQtree/July72020/mvffiles/Wildcanids_nodogsredIndianwolf_minQ30_noindels_noparalogs_geno0.1_chrX.mvf
+```
+
+#####################################
+Convert mvf file to fasta file
+#####################################
+```
+module load bio3
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertMVF2Fasta --mvf /home/hennelly/projects/IQtree/July72020/mvffiles/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_chrX.mvf --out /home/hennelly/projects/IQtree/July72020/fastafiles/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_chrX.fasta
+```
+
+################################################
+Adjust fasta file to put outgroup on first line
+################################################
+I can use vim and use yy as copy the whole line and p to paste. I will also need to remove the >REF line. 
+
+################################################
+Running IQTree with model selection on the X chromosome
+################################################
+```
+/home/hennelly/bin/iqtree-1.6.12-Linux/bin/iqtree -s /home/hennelly/projects/IQtree/July72020/fastafiles_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_Xchr_withmodels.fasta -bb 1000 -nt AUTO -m TVM+F+R4```
+```
