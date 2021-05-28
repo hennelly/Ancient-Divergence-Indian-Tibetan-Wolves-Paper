@@ -1,0 +1,58 @@
+                     ##############################################################
+                     ######################### Pairwise Fst #######################
+                     ##############################################################
+
+I used vcftools to calculate the Weir and Cockerham's Fst. 
+
+```
+touch vcftoolsFstwindow_Sept292020_NorthAmericanvsTibetan.sh
+
+###############
+#Within the script: 
+###############
+
+module load vcftools
+
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_maxmiss0.8.recode.vcf --weir-fst-pop Tibetan2020pop --weir-fst-pop Northamerican2020pop --out /home/hennelly/projects/Genomescans/Sept2020/NorthAmericanvsTibetan_Fst_Sept292020
+###############
+
+sbatch vcftoolsFstwindow_Sept292020_NorthAmericanvsTibetan.sh
+```
+ I then calculated Fst for each population pair seperately, using a new sbatch script. Populaiton pairs are listed below:
+
+```
+CentralAsian2020pop vs EastAsian2020pop 
+WestAsian2020pop vs CentralAsian2020pop 
+WestAsian2020pop vs EastAsian2020pop 
+Indianwolf2020pop vs EastAsian2020pop 
+Indianwolf2020pop vs WestAsian2020pop 
+Indianwolf2020pop vs CentralAsian2020pop 
+Indianwolf2020pop vs Northamerican2020pop 
+Northamerican2020pop vs CentralAsian2020pop 
+Northamerican2020pop vs WestAsian2020pop 
+Northamerican2020pop vs EastAsian2020pop 
+Tibetan2020pop vs Northamerican2020pop
+Tibetan2020pop vs EastAsian2020pop
+Tibetan2020pop vs CentralAsian2020pop
+Tibetan2020pop vs Indianwolf2020pop
+Tibetan2020pop vs WestAsian2020pop 
+```
+
+                     #####################################################################
+                     ######################### Geography Distances #######################
+                     #####################################################################
+                     
+I calcuated the distance from each population using Google Earth. Specifically, I added paths between the center of individuals within each population to determine the center of 
+wolf populations. If the population was located in just a providence (such as Qinghai), I placed the marker in the center of the providence. Next, I draw a line connecting the 
+centroid of pairwise populations. For North American wolves, I draw the path across the Bering Strait, followed by the least distance path that was located fully on land. 
+
+                     #################################################################
+                     ######################### R code for Plot #######################
+                     #################################################################
+```{r}             
+pdf ("FstvsGeography.pdf", height=5, width=6)
+p <- ggplot(dat, aes(x=distance.km., y=fst, color=Comparison)) + geom_point() +   geom_smooth(method=lm, se=FALSE, fullrange=TRUE) + theme_classic()
+p+scale_color_brewer(palette="Dark2")
+p
+dev.off()
+```
