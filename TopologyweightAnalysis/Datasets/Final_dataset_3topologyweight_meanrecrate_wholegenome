@@ -1,0 +1,6 @@
+This final dataset has the information on weights of each of 3 topologies, the starting position of the 100-SNP window, the mean recombination rate within
+that 100-SNP window, and the chromosome numbers. 
+
+The dataset is around 29MB and is too big to load on Github. It is located in my iCloud Drive/UC-Davis/Ph.D projects/Writing/Manuscript 1/FinalDatasets
+
+The name is the dataset is: FINISHED_WHOLEGENOME_3topologyweight_&_meanrecombinationrate_09202020.csv
