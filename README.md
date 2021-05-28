@@ -6,7 +6,7 @@ The **Aligning_and_Filtering** folder contains scripts for the following categor
 
 The **Genomewide_Summary_Analysis** folder contains scripts and results for running Admixture, Principle Component Analysis, and inferring the pairwise Fst. 
 
-The **GeneFlow_Analyses** folder contains the scripts and results for the D statistic and F3 statistic analyses. 
+The **GeneFlow_Analyses** folder contains the scripts and results for the D statistic, F3 statistic analyses, and qpGraph. 
 
 The **Phylogenomics** folder contains the scripts and results for inferring the autosomal, mitogenome, and X chromosome phylogeny. 
 
