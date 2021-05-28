@@ -1,0 +1,85 @@
+                     #########################################################################################
+                     ######################### Analysis and Figures for f3 Statistics ########################
+                     #########################################################################################
+
+                                    ################################################
+                                    ################################################
+                                    ## Code for running f3 statistics using Unix ###
+                                    ################################################
+                                    ################################################
+
+The three population test is a test for treeness in three population trees. These tests are of the form (A;B,C), where a 
+significantly negative value of the f3 statistic implies that population A is admixed. If f3 is positive, there there is no 
+evidence that A is descended from an admixture event of B and C. If Z is less than -3, it is significantly negative. 
+
+There are four columns, which correspond to f3 statistic, the standard error int he f3 statistic, and the Z score.
+
+##############################################
+### Step One: Creating a frq.strat.gz file ###
+##############################################
+
+First, I need to generate a population tags file containing three columns: FAMID and ID (samle as the samples from bim file)
+and an added column of POP. I changed the third column to my populations (ex: Indian wolf, etc) by hand using vim. Each column 
+is seperated by a space. 
+```
+awk '{print $1, $2, $1}' Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.fam > poptags_wolves_3poptest.txt
+```
+Code to create frq.strat.gz file: 
+```
+plink -bfile /home/hennelly/projects/f3Statistic/databases/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes --freq --within poptags_wolves_3poptest.txt --out Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes --dog --allow-extra-chr
+
+/home/hennelly/projects/f3Statistic/databases/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.frq.strat
+```
+###########################################################
+### Step Two: Convert frq.strat.gz file to treemix file ###
+###########################################################
+This requires some memory, I had ran out of memory using 8G here. 
+```
+python /home/hennelly/bin/treemix-1.13/plink2treemix.py /home/hennelly/projects/f3Statistic/databases/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.frq.strat.gz /home/hennelly/projects/f3Statistic/treemixfiles/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes.tm.in.gz
+```
+###########################################
+## Step Three: Running the f3 statistic ###
+###########################################
+Here is the script to run the f3 statistic. The f3 statistics take a long time to run with the whole autosomal genome.
+I first did 3 days and it ran out of time, so I added to 15 days. 
+```
+/home/hennelly/bin/treemix-1.13/src/threepop -i /home/hennelly/projects/f3Statistic/treemixfiles/Wolves_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes_specificpop.tm.in.gz -k 500
+```
+#####################################
+### Step Four:  Format the output ###
+#####################################
+First, I need to delete the lines that are warning messages: 
+```
+sed '/^W/d' threepop_wolves_specificpopulations_Iran_chrX.out > threepop_wolves_specificpopulations_Iran_chrX_nowarnings.csv
+sed '/^E/d' threepop_wolves_specificpopulations_Iran_chrX_nowarnings.csv > threepop_wolves_specificpopulations_Iran_chrX_nowarningsorE.csv
+sed '/^t/d' threepop_wolves_specificpopulations_Iran_nowarningsorE.csv > threepop_wolves_specificpopulations_Iran_nowarningsorEort.csv
+
+```
+Next, I can copy and paste the output of the f3 statistic into an excel file on my local macbook. Then I can work with the file in R 
+after moving the file into my local computer: 
+```
+scp  -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/f3Statistic/threepop_wolves_specificpopulations_Iran_chrX_nowarningsorEort.csv ~/Desktop
+```
+                                    #############################################
+                                    #############################################
+                                    ## Code for figures f3 statistics using R ###
+                                    #############################################
+                                    #############################################
+  
+######################################
+######## Step one: Load Data #########
+######################################
+```
+library (ggplot2)
+library(Hmisc)
+f3 <- read.csv ("f3statistics_broadpop.csv" , header=TRUE)
+```
+######################################
+##### Step two: Graph the data #######
+######################################
+```            
+pdf("f3statistc_broadpop.pdf")
+p <- ggplot (f3, aes(x=Tree, y=F3)) + geom_bar(stat="identity",fill="gray94",colour="black", width = .6) + theme_classic() 
+p + coord_flip()
+dev.off() 
+```                     
