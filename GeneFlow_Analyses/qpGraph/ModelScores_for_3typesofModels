@@ -1,0 +1,16 @@
+number	Model Score	topology	label 	Coyote admixture? 	Admixed wolf populatins included? 
+1	443864309.5	Ind-Tib-NA	noadmix_between_graywolves_or_Coyote	No	No
+2	443854977.1	Ind-NA-Tib	noadmix_between_graywolves_or_Coyote	No	No
+3	443901615.5	Tib-Ind-NA	noadmix_between_graywolves_or_Coyote	No	No
+4	443873247.6	NA-Ind-Tib	noadmix_between_graywolves_or_Coyote	No	No
+5	443904919.1	NA-Tib-Ind	noadmix_between_graywolves_or_Coyote	No	No
+1	443846276.2	Ind-Tib-NA	noadmix_between_admixed_wolves_&_admixture_withCoyote	Yes	No
+2	443849008.7	Ind-NA-Tib	noadmix_between_admixed_wolves_&_admixture_withCoyote	Yes	No
+3	443889104.9	Tib-Ind-NA	noadmix_between_admixed_wolves_&_admixture_withCoyote	Yes	No
+4	443873253.4	NA-Ind-Tib	noadmix_between_admixed_wolves_&_admixture_withCoyote	Yes	No
+5	443904919.1	NA-Tib-Ind	noadmix_between_admixed_wolves_&_admixture_withCoyote	Yes	No
+1	372277826.5	Ind-Tib-NA	geneflow_between_admixed_wolves_andCoyote	Yes	Yes
+2	 372279453.229	Ind-NA-Tib	geneflow_between_admixed_wolves_andCoyote	Yes	Yes
+3	372320991.8	Tib-Ind-NA	geneflow_between_admixed_wolves_andCoyote	Yes	Yes
+4	372308637.8	NA-Ind-Tib	geneflow_between_admixed_wolves_andCoyote	Yes	Yes
+5	372329187.1	NA-Tib-Ind	geneflow_between_admixed_wolves_andCoyote	Yes	Yes
