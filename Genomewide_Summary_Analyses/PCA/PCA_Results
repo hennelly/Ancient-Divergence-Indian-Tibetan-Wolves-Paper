@@ -1,0 +1,34 @@
+Species	Taxa	Sample	PC1	PC2	PC3	PC4			 		
+Indian wolf	Indian wolf	BH123_sorted_proper_nodups	0.433755	-0.0735825	0.0987441	0.0040949	
+Indian wolf	Indian wolf	BH124_sorted_proper_nodups	0.459231	-0.0597271	0.091898	0.0105178		
+Indian wolf	Indian wolf	BH126_sorted_proper_nodups	0.482518	-0.0591728	0.095194	0.0154952	
+Ladakh wolf	Tibetan wolf	BH1_sorted_proper_nodups	0.0157353	-0.176867	0.0156271	-0.00602116	
+Ladakh wolf	Tibetan wolf	BH4_sorted_proper_nodups	-0.0314261	-0.253908	0.0168956	0.0285619	
+Indian wolf	Indian wolf	BH6_sorted_proper_nodups	0.392325	-0.055409	0.0723338	0.00194678	
+Dog	Dog	SRR1061818_sorted_proper_nodups	-0.0219501	0.10608	-0.373816	0.305145	
+Dog	Dog	SRR1061963_sorted_proper_nodups	-0.0204839	0.0925774	-0.378893	0.3145	
+Dog	Dog	SRR1061964_sorted_proper_nodups	-0.0147176	0.106586	-0.394637	0.326131	
+Iran wolf	West Asian Holarctic wolf	SRR1518518_sorted_proper_nodups	0.0670778	0.0769847	-0.0908353	-0.040337	
+Inner Mong wolf	North Asian Holarctic wolf	SRR2827600_sorted_proper_nodups	-0.0949123	0.0654399	-0.0120601	-0.176597	
+Xingjang wolf	North Asian Holarctic wolf	SRR2827601_sorted_proper_nodups	-0.0369981	0.0636709	-0.0220491	-0.164095	
+Inner Mong wolf	North Asian Holarctic wolf	SRR2827603_sorted_proper_nodups	-0.100991	0.033274	-0.011009	-0.177086
+Xingjang wolf	North Asian Holarctic wolf	SRR2827609_sorted_proper_nodups	-0.0501	0.0797461	-0.0204275	-0.215435	
+Xingjang wolf	North Asian Holarctic wolf	SRR2827611_sorted_proper_nodups	-0.0495886	0.0583161	-0.00858216	-0.1561	
+Inner Mong wolf	North Asian Holarctic wolf	SRR5168998_sorted_proper_nodups	-0.0739841	0.0809958	-0.00814436	-0.217331	
+Xingjang wolf	North Asian Holarctic wolf	SRR7107645_sorted_proper_nodups	-0.0449294	0.0724667	-0.0249286	-0.138352	
+ChukotkaRussia	North Asian Holarctic wolf	SRR7107646_sorted_proper_nodups	-0.0905573	0.0844116	0.0430018	-0.107585	
+ByranskRussia	North Asian Holarctic wolf	SRR7107647_sorted_proper_nodups	-0.0294704	0.100004	-0.0617378	-0.0685307	
+North American	North American Holarctic wolf	SRR7107786_sorted_proper_nodups	-0.106902	0.194379	0.34544	0.269599	
+Tibetan wolf	Tibetan wolf	SRR7107906_sorted_proper_nodups	-0.159063	-0.47633	0.0231535	0.101569	
+Tibetan wolf	Tibetan wolf	SRR7107907_sorted_proper_nodups	-0.148053	-0.348556	0.0175586	0.0388921	
+Inner Mong wolf	North Asian Holarctic wolf	SRR7107908_sorted_proper_nodups	-0.091478	0.0697044	-0.00723231	-0.232614	
+Xingjang wolf	North Asian Holarctic wolf	SRR7107909_sorted_proper_nodups	-0.0443104	0.0832667	-0.0243985	-0.219522	
+Tibetan wolf	Tibetan wolf	SRR7107910_sorted_proper_nodups	-0.14125	-0.289942	0.0122248	0.0137595	
+Xingjang wolf	North Asian Holarctic wolf	SRR7107911_sorted_proper_nodups	-0.0413644	0.081795	-0.0268424	-0.189823
+Tibetan wolf	Tibetan wolf	SRR7107912_sorted_proper_nodups	-0.139463	-0.44478	0.0214737	0.0989104	
+Inner Mong wolf	North Asian Holarctic wolf	SRR7107913_sorted_proper_nodups	-0.0933487	0.0632033	-0.00105109	-0.20611	
+Arabian wolf	West Asian Holarctic wolf	SRR8049193_sorted_proper_nodups	0.0622057	0.106941	-0.187527	0.0473888	
+Arabian wolf	West Asian Holarctic wolf	SRR8049194_sorted_proper_nodups	0.0569509	0.108009	-0.177038	0.0263196	
+North American	North American Holarctic wolf	SRR8049197_sorted_proper_nodups	-0.116201	0.186345	0.379489	0.296773	
+North American	North American Holarctic wolf	SRR8066602_sorted_proper_nodups	-0.108688	0.168924	0.290096	0.201833	
+North American	North American Holarctic wolf	SRR8066605_sorted_proper_nodups	-0.118429	0.162922	0.308659	0.220951
