@@ -1,0 +1,134 @@
+
+                     #########################################################################################
+                     ######################### Analysis for Nuclear Phylogenetic Trees #######################
+                     #########################################################################################
+
+                                    #################################################
+                                    #################################################
+                                    ## Code for inferring the autosomal phylogeny ###
+                                    #################################################
+------------------------------------#################################################-----------------------------------------------------------------
+
+First, I need to subset the dataset to include certain taxa: 
+1.) All wild canids, exclude dogs 
+2.) Exclude Red wolves and Eastern wolves 
+3.) Exclude Red wolves, Eastern wolves, and Indian wolves 
+4.) Exclude Red wolves, Ladakh wolves 
+5.) Exclude Red wolves, Eastern wolves, Indian wolves, Ladakh wolves
+6.) Exclude red, eastern, Tibetan, Ladakh wolves
+
+```
+plink --file /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Final_Samples_minQ30_noindels_noparalogs_geno0.1_autosomes --remove my_list.txt --dog --allow-extra-chr --recode vcf
+```
+1.) All wild canids, exclude dogs
+```
+touch mylist_nodogs_07082020.txt
+0 SRR1061818_sorted_proper_nodups
+0 SRR1061963_sorted_proper_nodups
+0 SRR1061964_sorted_proper_nodups
+```
+2.) All canids, exclude dogs, red wolves, eastern wolves
+```
+touch mylist_nodogsredwolves_07082020.txt
+0 SRR1061818_sorted_proper_nodups
+0 SRR1061963_sorted_proper_nodups
+0 SRR1061964_sorted_proper_nodups
+0 SRR7976417_sorted_proper_nodups
+0 SRR8066610_sorted_proper_nodups
+```
+3.) All canids, exclude dogs, red, eastern, and Indian wolves 
+```
+touch mylist_nodogsredIndianwolves_07082020.txt
+0 SRR1061818_sorted_proper_nodups
+0 SRR1061963_sorted_proper_nodups
+0 SRR1061964_sorted_proper_nodups
+0 SRR7976417_sorted_proper_nodups
+0 SRR8066610_sorted_proper_nodups
+0 BH123_sorted_proper_nodups
+0 BH124_sorted_proper_nodups
+0 BH126_sorted_proper_nodups
+0 BH6_sorted_proper_nodups
+```
+4.) All canids, exclude dogs, red, eastern, Ladakh wolves 
+```
+touch mylist_nodogsredLadakhwolves_07082020.txt
+0 SRR1061818_sorted_proper_nodups
+0 SRR1061963_sorted_proper_nodups
+0 SRR1061964_sorted_proper_nodups
+0 SRR7976417_sorted_proper_nodups
+0 SRR8066610_sorted_proper_nodups
+0 BH1_sorted_proper_nodups
+0 BH4_sorted_proper_nodups
+```
+5.) All canids, exclude dogs, red, eastern, Ladakh, Indian wolves 
+```
+touch mylist_nodogsredIndianLadakhIndianwolves_07082020.txt
+0 SRR1061818_sorted_proper_nodups
+0 SRR1061963_sorted_proper_nodups
+0 SRR1061964_sorted_proper_nodups
+0 SRR7976417_sorted_proper_nodups
+0 SRR8066610_sorted_proper_nodups
+0 BH1_sorted_proper_nodups
+0 BH6_sorted_proper_nodups
+0 BH123_sorted_proper_nodups
+0 BH124_sorted_proper_nodups
+0 BH126_sorted_proper_nodups
+0 BH6_sorted_proper_nodups
+```
+
+######################
+Extract the Autosomes:
+######################
+```
+module load vcftools
+vcftools --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_maxmiss0.8.recode.vcf --chr 1-38 --out /home/hennelly/projects/IQtree/March132020/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_maxmiss0.8_autosomes --recode --recode-INFO-all
+```
+
+                                    #################################################
+                                    ## Code for inferring the autosomal phylogeny ###
+                                    #################################################
+                                    
+                                   
+###########################################################
+Remove specific individuals from the Autosomal dataset
+###########################################################----------------------------------------------------------------------
+```
+module load plink
+plink --file Final_Samples_minQ30_noindels_noparalogs_geno0.1_Xchr --remove mylist_nodogs_07082020.txt --dog --allow-extra-chr --recode vcf --out Wildcanids_nodogs_minQ30_noindels_noparalogs_geno0.1_autosomes
+```
+
+#####################################
+Convert vcf file to mvf file        
+#####################################---------------------------------------------------------------------------------------------
+```
+module load bio3
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertVCF2MVF --vcf /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wildcanids_nodogsredIndianwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.vcf --out /home/hennelly/projects/IQtree/July72020/mvffiles/Wildcanids_nodogsredIndianwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.mvf
+```
+
+#####################################
+Convert mvf file to fasta file
+#####################################---------------------------------------------------------------------------------------------
+```
+module load bio3
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertMVF2Fasta --mvf /home/hennelly/projects/IQtree/July72020/mvffiles/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_chr1.mvf --out /home/hennelly/projects/IQtree/July72020/fastafiles/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_chr1.fasta
+```
+################################################
+Adjust fasta file to put outgroup on first line
+################################################---------------------------------------------------------------------------------
+I can use vim and use yy as copy the whole line and p to paste. I will also need to remove the >REF line. 
+
+################################################
+Running IQTree with model selection
+################################################---------------------------------------------------------------------------------
+```
+#ran at 15G for 30 days! 
+
+~/bin/iqtree-1.6.12-Linux/bin/iqtree -s  /home/hennelly/projects/IQtree/July72020/fastafiles_autosomes/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.fasta -bb 1000 -nt AUTO 
+```
+
+**Note**: running the autosomal tree did take around 25 days to complete. I ran it using 8G of memory for the 25 days. 
+
+Move output files from Farm to desktop: 
+```
+scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/IQtree/July72020/fastafiles_autosomes/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes_modelselection.fasta.tree ~/Desktop
+```
