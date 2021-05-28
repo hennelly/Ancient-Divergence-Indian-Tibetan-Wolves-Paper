@@ -1,0 +1,71 @@
+
+                     #########################################################################################
+                     ######################### Principle Compontent Analysis on samples #######################
+                     #########################################################################################
+                     
+                                                    ###############################
+                                                    ##### Running PCA in Farm #####
+                                                    ###############################
+I used the pca in plink to run the principle component analysis (PCA) on my whole genome samples. 
+
+########################################
+### Step One: removing X chromosome ####
+########################################
+First, I will just keep the autosomes to run the PCA, so that means to remove the X chromosome:
+```
+plink --file /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0 --chr 1-38 
+--out /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0/home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes
+```
+#################################
+### Step Two: remove linkage ####
+#################################                
+It's important to prune the variants that are in approximate linkage equilibrium with each other. This command below writes the IDs to plink.prune.in.,
+which is based on correlations between genotype allele counts. Output files are valid input for --extract/--exclude in a future PLINK run.                  
+
+Options: 
+--indep-pairwise <window size>['kb'] <step size(variant ct)> <r^2 threshold>
+--indep-pairwise  50 5 0.5
+> This means the default LD r^2 value 0.5 as a cutoff and prunees then LD < 0.5. So the command then (a) considers a window fo 50 SNPs, 
+(b) calculates the LD between each pair of SNPs in the window, (c) removes one of a pair of SNPs if the LD is greater than 0.5, 
+(d) shifts the windwo 5 SNPs foward and repeats the procedure. 
+
+#### Step 2a. Identify variants in LD with each other ####
+This is the script to identify variants in LD:
+```
+plink --bfile /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes 
+--indep-pairwise 50 5 0.5 --out /home/hennelly/projects/PCA/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes_linkage 
+--const-fid 0 --dog --allow-extra-chr
+```    
+#### Step 2b. Remove these variants from dataset ####
+Here's the script to remove these variants: 
+```
+plink --bfile /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes 
+--extract /home/hennelly/projects/PCA/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes_linkage.prune.in 
+--out /home/hennelly/projects/PCA/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.0_autosomes_prunedLD --recode --const-fid 0 --dog --allow-extra-chr
+```
+####################################
+### Step Three: Run PCA in plink ###
+####################################
+Here's the script for running PCA in plink:
+```
+plink --file /home/hennelly/projects/PCA/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes_prunedLD --pca var-wts  --const-fid 0 --dog
+```
+
+#####################################
+### Step Four: Plotting in gglot2 ###
+#####################################
+To plot in ggplot2, we will be using the eigenvectors. The eigenvalues tells you in order of each PC (so PC1, PC2, etc) the percentage each eigenvalue contributes to the variance. 
+```{r}
+                        #########################################
+                        ######## Step 1: Read in data ###########
+                        #########################################                        
+> library (ggplot2)
+> dat <- read.csv ("WolvesandDogs_mac3_geno0.1_autosomes_3533317snps.csv", header=TRUE)
+                        #########################################
+                        ######## Step 2: Plot the graph #########
+                        #########################################                        
+pdf ("pca_autosomes.pdf", height=3, width=6)
+p <- ggplot(dat,aes(x=PC1,y=PC2,color=Taxa)) + geom_point(size = 3) + scale_color_manual(values=c("gray", "deepskyblue1", "red", "green3", "darkorange", "darkorchid3")) + theme_classic() 
+p
+dev.off()
+```     
