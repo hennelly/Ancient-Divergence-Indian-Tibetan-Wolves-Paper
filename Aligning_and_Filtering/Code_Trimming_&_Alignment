@@ -1,0 +1,129 @@
+
+                     ###################################################################################
+                     ######################### Trimming Adapters and Alignment  ########################
+                     ###################################################################################
+
+This pipeline for alignment and calling SNPs was developed by Zach Lounsberry. This pipeline allows for a more time efficient way to align and call SNPs from whole genome sequences. 
+
+                                    ########################################
+                                    ########################################
+                                    ## Trimming whole genome fastq files ###
+                                    ########################################
+                                    ########################################
+                                    
+For trimming adapters, I used the program Trim Galore version 0.6.5 (https://www.bioinformatics.babraham.ac.uk/projects/trim_galore/). This required some specific module loads and 
+a list of the forward and reverse sequences of the samples.  
+```
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+R1=$(sed "${SLURM_ARRAY_TASK_ID}q;d" trimgaloresamples_forward.txt)
+R2=$(sed "${SLURM_ARRAY_TASK_ID}q;d" trimgaloresamples_reverse.txt)
+
+module load fastqc 
+module load cutadapt echo ${sample}
+
+/home/hennelly/bin/TrimGalore-0.6.5/trim_galore --illumina --gzip - /home/hennelly/fastqfiles/trimmedFastq/ --paired /home/hennelly/fastqfiles/${R1} /home/hennelly/fastqfiles/${R2} 
+```
+
+
+                                    #####################################################
+                                    #####################################################
+                                    ## Alignment of fastq files onto Reference Genome ###
+                                    #####################################################
+                                    #####################################################
+###########################
+STEP ONE: Split Fastq Files
+###########################                    
+This scripts splits each fastqfile into 4-million-sequence files to speed up alignment. To change about the script: 
+- The last lines starting with zcat should be directed towards the directory with your trimmed fastq files. 
+- You also need to make a sample_name.txt file that is one column with sample ID's. Zach gives this script: ``awk '{print $2}' ../01_HTStream/samples.txt > samples_split.txt`` to make one.
+
+```
+# This script assumes 01_htstream_clean.sh has been run and you're in the 02_Align directory.
+
+# samples_split.txt is a 1-column txt file with sample IDs.
+# You can make this by `awk '{print $2}' ../01_HTStream/samples.txt > samples_split.txt`
+
+# the NUMBER in the array line above needs to be changed to the result of `wc -l < samples_split.txt`
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+
+sample=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_split_one.txt)
+echo ${sample}
+
+# Split the file into 4-million-sequence files and move into its respective directory
+zcat /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/${sample}_1_val_1.fq.gz | split -a 4 -l 8000000 -d --additional-suffix=".fq" - ${sample}_1_val_1
+zcat /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/${sample}_2_val_2.fq.gz | split -a 4 -l 8000000 -d --additional-suffix=".fq" - ${sample}_2_val_2
+
+# gzip each fq file
+gzip ${sample}*fq
+```
+#####################################
+STEP TWO: Alignment to get a Bam File
+#####################################
+I ended up making a directory for each sample and then running the script below within each sample's directory 
+
+Things to change: 
+- the array should be the result of ```wc -l < samples_align.txt```
+- Below in zach's script, he gives a script to make the samples_align.txt file, which is just a file with the names of the subsetted fastqfiles 
+- in the bwa mem script, you will need to add the directory where your reference genome is
+
+```
+# To create samples_align.txt, once the previous set of jobs in finished, do:
+# cat <(paste <(ls *_1_val_*.fq.gz) <(ls *_2_val_*.fq.gz) <(ls *_1_val_*.fq.gz | sed 's/.fq.gz//g')     <(ls *_1_val_*.fq.gz | sed 's/_S.*//g')) > samples_align.txt
+
+# Once this is done, change NUMBER in line 4 above to be the result of `wc -l < samples_align.txt`
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+R1=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_align.txt | awk -F"        " '{print $1}')
+R2=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_align.txt | awk -F"        " '{print $2}')
+sample=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_align.txt | awk -F"    " '{print $3}')
+ID=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samples_align.txt | awk -F"        " '{print $4}')
+echo ${sample}
+
+# load the bwa and samtools modules
+module load bwa
+module load samtools
+
+# Align R1 and R2 
+# Pipe to a bam file that excludes bad mapping scores
+# Pipe to a sorted bam for merging
+
+bwa mem -R "@RG\tID:${ID}\tSM:${ID}" /home/hennelly/fastqfiles/DogRefwithY/genomes/canFam3_withY.fa ${R1} ${R2} | \
+samtools view -q 10 -h -b - | \
+samtools sort -o ${sample}.bam -
+```
+                                    
+#####################################
+STEP THREE: Merging the Bam Files
+#####################################                             
+Now you'll have lots of little bam files, which will need to be merged into a final bam file. 
+
+```
+module load samtools
+
+samtools merge /home/hennelly/projects/ZachSNPcalling/Feb272020/bamfiles/BH124.bam BH124_L4_*.bam
+```                                    
+############################################################
+STEP FOUR: Sorting and Removing Bad Reads from the Bam Files
+############################################################
+
+Since all my bam files are in their own sample directory, I ran this script within each directory. The ``samtools view -f 0x2`` only will keep the properly paired reads to the reference genome, which are the best reads. You can also use the java -jar file in my directory I think for this script. 
+
+Things to change: 
+- sample names for bam files 
+
+```
+module load samtools 
+
+samtools sort BH1.bam | \
+samtools view -f 0x2 -o temp/BH1_sorted_proper.bam -
+
+# mark duplicates 
+java -jar /home/hennelly/bin/picard.jar MarkDuplicates \
+      I=temp/BH1_sorted_proper.bam \
+      O=sorted/BH1_sorted_proper_nodups.bam \
+      M=BH1_metrics.txt
+
+# index
+samtools index sorted/BH1_sorted_proper_nodups.bam
+```
