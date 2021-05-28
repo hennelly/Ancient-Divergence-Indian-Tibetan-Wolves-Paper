@@ -1,0 +1,155 @@
+
+                     ###############################################################
+                     ######################### Calling SNPs ########################
+                     ###############################################################
+
+This pipeline for alignment and calling SNPs was developed by Zach Lounsberry. This pipeline allows for a more time efficient way to align and call SNPs from whole genome sequences. 
+
+                                    ###############################################
+                                    ###############################################
+                                    ## STEP ONE: Splitting Bam File into Chunks ###
+                                    ###############################################
+                                    ###############################################
+                                    
+This script needs a chromosome lengths file that tells the script how many total and how many base pairs each chromosome has. It then splits the bam file into 1000kb chunks.
+
+****Also,***** I previously ran into problems where the whole genome data is so large, that it lead to "disatrous I/O thrashing" and slowed down the entire Farm... Titus then suggested
+to increase N by a factor of 10, so there's only 80 jobs total, run them in a job array limited to 20 jobs at a time, and increase the job length to 24 hours. So, be very careful
+on how the shell script is written out. 
+
+```
+# Change NUMBER in line 4 to the total number of chromosomes in your organism (also the result of `wc -l < chromosome_lengths.txt`)
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f1)
+length=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f2)
+
+mkdir ${number}
+mkdir ${number}/freebayes
+mkdir ${number}/samtools
+
+# Split into 1000kb chunks
+for count in $(seq 1 1000000 ${length}); do
+        upper=$(echo "${count} + 1000000" | bc)
+        echo -e "${number}\t${count}\t${upper}"
+done > ${number}/ranges.txt
+
+lines=$(wc -l < ${number}/ranges.txt)
+
+echo "#!/usr/bin/env bash
+
+#SBATCH --job-name=hts_snps
+#SBATCH --array=1-${lines}%20
+#SBATCH --nodes 1
+#SBATCH --ntasks 1
+#SBATCH --time 24:00:00
+#SBATCH --mem=2GB
+#SBATCH -o arrayJob_%A_%a.out
+#SBATCH -p med
+#SBATCH --exclude=c10-96,c10-69,c11-76,c11-93,c11-86
+
+# load the modules
+module load freebayes
+module load bcftools
+
+echo \"My SLURM_ARRAY_TASK_ID: \" $SLURM_ARRAY_TASK_ID
+start=\$(sed \"\${SLURM_ARRAY_TASK_ID}q;d\" ranges.txt | cut -f2)
+end=\$(sed \"\${SLURM_ARRAY_TASK_ID}q;d\" ranges.txt | cut -f3)
+echo \"Processing ${number} at \${start}-\${end}\"
+
+freebayes -f /home/hennelly/fastqfiles/DogRefwithY/genomes/canFam3_withY.fa --min-alternate-fraction 0.3 --region ${number}:\${start}-\${end} /home/hennelly/projects/ZachSNPcalling/Feb272020/bamfilesMarch3/*.bam > freebayes/${number}.\${start}-\${end}.vcf
+
+#samtools mpileup -uf /home/hennelly/fastqfiles/DogRefwithY/genomes/canFam3_withY.fa -r ${number}:\${start}-\${end} /home/hennelly/projects/ZachSNPcalling/Feb272020/bamfiles/sorted/*.bam | bcftools call -cg - > samtools/${number}.\${start}-\${end}.vcf
+" > ${number}/${number}.freebayes.sh
+```
+
+                                    ############################################################
+                                    ############################################################
+                                    ## STEP TWO: Sbatch Shell Scripts to Execute SNP calling ###
+                                    ############################################################
+                                    ############################################################
+This script sbatches the previous scripts made in Step One.                                    
+```
+# Change NUMBER in line 4 to the total number of chromosomes in your organism (also the result of `wc -l < chromosome_lengths.txt`)
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f1)
+
+cd ${number}
+sbatch ${number}.freebayes.sh                                
+```
+
+                                    ########################################################
+                                    ########################################################
+                                    ## STEP THREE: Concatenate and add ID's to VCF files ###
+                                    ########################################################
+                                    ########################################################
+```
+
+# Change NUMBER in line 4 to the total number of chromosomes in your organism (also the result of `wc -l < chromosome_lengths.txt`)
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f1)
+
+#Used the second of two commands below, which has SNP ID's, here. freebayes commented out so I could re-run samtools and fix the monomorphic calls.
+
+cat <(grep "#" ${number}/freebayes/${number}.1-1000001.vcf) <(grep --no-filename -v "#" ${number}/freebayes/*vcf | sort -n -k2) > ${number}/freebayes/${number}.vcf
+cat <(grep "#" ${number}/freebayes/${number}.vcf) <(paste <(grep -v "#" ${number}/freebayes/${number}.vcf | cut -f1,2) <(grep -v "#" ${number}/freebayes/${number}.vcf | awk '{print $1"_"$2}') <(grep -v "#" ${number}/freebayes/${number}.vcf | cut -f4-)) > ${number}/${number}.freebayes.WithIDs.vcf
+
+#cat <(grep "#" ${number}/samtools/${number}.1-100001.vcf) <(grep --no-filename -v "#" ${number}/samtools/*vcf | sort -n -k2) > ${number}/samtools/${number}.vcf
+#cat <(grep "#" ${number}/samtools/${number}.vcf) <(paste <(grep -v "#" ${number}/samtools/${number}.vcf | cut -f1,2) <(grep -v "#" ${number}/samtools/${number}.vcf | awk '{print $1"_"$2}') <(grep -v "#" ${number}/samtools/${number}.vcf | cut -f4-)) | awk '$5!="." {print}' > ${number}/${number}.samtools.WithIDs.vcf
+```
+
+                                    ##########################################################
+                                    ##########################################################
+                                    ## STEP FOUR: Combine all VCF files across chromosomes ###
+                                    ##########################################################
+                                    ##########################################################                                
+                                                                        
+```
+cat <(grep "#" chr1/freebayes/chr1.1000001-2000001.vcf) <(for number in $(seq 1 1 39); do grep -v "#" chr${number}/chr${number}_minQ30_noindels.recode.vcf; done) <(grep -v "#" chrX/chrX_minQ30_noindels.recode.vcf) > All_Combined_minQ30_noindels.vcf
+```
+                                    
+                                    #############################################
+                                    #############################################
+                                    ## FILTERING THE VCF FILES using VCFTOOLS ###
+                                    #############################################
+                                    #############################################                               
+I found it easier to filter the vcf file wihtin each chromosome, then combine with the STEP FOUR script above. 
+
+The following filtering through vcftools filters out indels and keep sites that have a min Quality score of at least 30. 
+```
+# Change NUMBER in line 4 to the total number of chromosomes in your organism (also the result of `wc -l < chromosome_lengths.txt`)
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f1)
+
+#load modules 
+
+module load vcftools
+
+
+vcftools --vcf ${number}/${number}.freebayes.WithIDs.vcf --out ${number}/${number}_minQ30_noindels --recode --recode-INFO-all --remove-indels --minQ 30 
+```
+                                    ##########################################
+                                    ##########################################
+                                    ## FILTERING THE VCF FILES using PLINK ###
+                                    ##########################################
+                                    ##########################################
+Again, I filtered for each chromosome and then combined the vcfs using STEP FOUR in the calling SNPs protocol. 
+
+Here, plink keeps only sites that have atleast 90% of individuals present (--geno 0.1).  
+
+```
+# Change NUMBER in line 4 to the total number of chromosomes in your organism (also the result of `wc -l < chromosome_lengths.txt`)
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+number=$(sed "${SLURM_ARRAY_TASK_ID}q;d" chromosome_lengths.txt | cut -f1)
+
+#load modules 
+
+module load plink 
+
+plink --vcf ${number}/${number}_minQ30_noindels.recode.vcf --const-fid 0 --dog --recode --out ${number}/${number}_minQ30_noindels_geno0.1 --allow-extra-chr --geno 0.1 
+```
+            
