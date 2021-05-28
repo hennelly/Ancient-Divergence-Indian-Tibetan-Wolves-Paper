@@ -1,0 +1,56 @@
+                     ####################################################################
+                     ######################### Admixture Analysis #######################
+                     ####################################################################
+
+Admixture is a program for estimating ancestry in a model-based manner from large autosomal SNP genotype datasets, where individuals are unrelated (Alexander and Lange 2011).
+For some reason, ped/map files don’t work for Admixture, so I’ll convert my ped/map files to bed format. We used Admixture (v 1.3.0). 
+
+67.	D.H. Alexander, K. Lange. Enhancements to the Admixture algorithm for individual ancestry estimation. BMC Bioinformatics 12: 246 (2011). 
+
+I also ran Admixture on different combinations of samples, such as only wolves, wolves and dogs, wolves, dogs, and coyote relatives, 
+and all canids (including African wolves). This output can then be used to help infer groupings of canids (such as North American,
+Middle East, etc) that is inferred by the data, instead of traditional taxonomic groupings. For example, traditionally, 
+Canis lupus pallipes is described as being distributed from India to Syria, yet my Admixture results groups Syrian wolves with Saudi Arabian wolves.
+
+######################################
+##### Step One: File Conversions #####
+######################################
+Below, I used the same filtering technique as I performed for the PCA. I also used a minor allele count of 3 because my dataset for PCA and Admixture 
+includes only gray wolves and 3 dogs, where I have at least 3 individuals within each grouping of gray wolf. 
+
+Script for vcf to ped:
+```
+module load vcftools
+vcftools --vcf /home/hennelly/projects/Freebayes/FreebayesWGSwolf/Wolf_nodogs_noNAwolves_minQ20_noindels_noparalogs.recode.vcf --plink --out /Wolf_nodogs_noNAwolves_minQ20_noindels_noparalogs
+```
+Script for ped/map to bed format:
+```
+plink --file /home/hennelly/projects/PCA/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes_prunedLD --out /home/hennelly/projects/Admixture/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes_prunedLD --make-bed --dog 
+```
+
+#######################################
+##### Step Two: Running Admixture #####
+#######################################
+To run Admixture (v 1.3.0), I used the following script below. The last character in the script is the amount of groups, which I used around 2-8.
+```
+/home/hennelly/bin/admixture_linux-1.3.0/admixture /home/hennelly/projects/Admixture/databases/Wolves_andDogs_minQ30_noindels_noparalogs_mac3_geno0.1_autosomes_prunedLD.bed 2
+```
+
+############################################################
+##### Step Three: Graph the results using ggplot2 in R #####
+############################################################
+I copy and pasted the results into a csv file, and then plot in R.
+
+```{r}
+##### Load Data #####      
+dat <-read.csv ("WolfandDog_geno0.1_autosomes_mac3_3millionsnps_K6.csv", header=TRUE)
+#####Plot Structure Figures #####
+library (ggplot2)
+q <- ggplot(dat, aes(fill=Ancestry, y=Percentage, x=Population)) + 
+    geom_bar(position="stack", stat="identity") +scale_fill_manual(values = c("mediumseagreen","maroon4", "red", "orange2", "royalblue4", "honeydew4")) 
+q + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p <- q + theme_classic()
+p
+                ####################################################
+
+I then used Inkscape to make the final figure. 
