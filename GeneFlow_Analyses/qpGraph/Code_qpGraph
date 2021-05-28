@@ -1,0 +1,97 @@
+                    ########################################################################
+                     ######################### Analysis for qpGraph  ########################
+                     ########################################################################
+                     
+################################################
+### Step One: Convert ped/map to EIGENSTRAT ####
+################################################
+ 
+```
+touch par.autosomes
+
+genotypename:    /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.ped
+snpname:         /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.map
+indivname:       /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.ped
+outputformat:    EIGENSTRAT
+genotypeoutname: /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.eigenstratgeno
+snpoutname:      /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.snp
+indivoutname:    /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.ind
+familynames:     NO
+numchrom: 38
+
+#Sbatch:
+/home/hennelly/bin/convertf2  -p par.autosomes
+```
+
+################################################
+### Step Two: Create parfile for qpGraph ####
+################################################
+
+                     
+indivname:       /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.ind  
+snpname:         /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.snp       
+genotypename:    /home/hennelly/projects/qpBrute/datasets/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.eigenstratgeno  
+outpop:         Out     
+blgsize:        0.05
+## block size in Morgans for Jackknife
+## see below 
+lsqmode:       YES
+diag:          .0001
+hires:         YES
+initmix:      1000 
+precision:    .0001  
+zthresh:      3.0
+terse:        NO
+useallsnps:   NO                     
+                     
+##########################################
+### Step Two: Creating the Graph File ####
+##########################################
+The graph file contains the structure of the phylogeny and admixture events for qpGraph. I will be created five different ordered topology graphs for 3 different sets of topologies
+
+1.) No gene flow, No admixed wolf populations
+Ind-Tib-NA
+Ind-NA-Tib
+Tib-Ind-NA
+NA-Ind-Tib
+NA-Tib-Ind
+
+2.) Only gene flow between coyote and NA wolf, no admixed wolf populations 
+Ind-Tib-NA
+Ind-NA-Tib
+Tib-Ind-NA
+NA-Ind-Tib
+NA-Tib-Ind
+
+3.) Gene flow between coyote and NA wolf, admixed wolf populations with gene flow between them 
+Ind-Tib-NA
+Ind-NA-Tib
+Tib-Ind-NA
+NA-Ind-Tib
+NA-Tib-Ind
+
+
+
+##################################################
+### Step Three: Running the qpGraph code #########
+##################################################
+ 
+ ```
+module load openblas
+
+module load gsl
+
+/home/hennelly/bin/AdmixTools_2/AdmixTools/src/qpGraph -p parfile -g /home/hennelly/projects/qpBrute/autosomes_WildCanids/graphfiles_Coyote/graph8 -d /home/hennelly/projects/qpBrute/qpGraph_Revision_May212021/dotfiles/dotfile_graphtest >  /home/hennelly/projects/qpBrute/qpGraph_Revision_May212021/logfiles/logfile_graphtest.txt
+```
+
+########################################################################################
+### Step Four: Obtaining the figure showing the Admixture Graph with gene flow #########
+########################################################################################
+
+dot -Tpng dotfile_graph14 -o Graph14.png
+
+
+
+
+
+
