@@ -1,0 +1,95 @@
+                     #########################################################################################
+                     ######################### inferring phylogeny for low recombination regions #############
+                     #########################################################################################
+
+                                    ################################################################
+                                    ################################################################
+                                    ## Extracting low recombination regions from genomic dataset ###
+                                    ################################################################
+                                    ################################################################
+                                    
+I will need to create a bed file with the positions marking that have low average recombination rate, and use this to extract these positions within the vcf file. 
+
+
+Starting position and mean recombination rates are in /home/hennelly/projects/Twisst/March132020/RecRateanalysis/FINISHED_WHOLEGENOME.csv
+
+#########################################################
+## STEP ONE: Adjust to add ending positions in dataset ##
+#########################################################
+
+I did this in excel. I copy and pasted the starting positions without the first row, and then substracted by one. 
+Then I placed this into the farm cluster by: 
+```
+rsync -avz -e "ssh -p 2022" --progress ~/Desktop/FINISHED_WHOLEGENOME_endposition-sept22.csv hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Twisst/March132020/RecRateanalysis
+```
+###################################################################
+## STEP TWO: extract positions with recombination rate below 0.5 ##
+###################################################################
+```{r}
+dat <- read.csv ("FINISHED_WHOLEGENOME_endposition-sept23.csv", header=TRUE)
+dat_below0.2 <- subset(dat,mean_recombinationrate_in_window < 0.2) #subset to keep only rows with mean rec rate below 0.2
+dat2 <- dat[dat$label == "topoA", ] #subset to keep only rows with mean rec rate below 0.2
+write.csv (dat2, "FINISHED_WHOLEGENOME_RECRATEbelow0.2_Sept23_2020_new.csv") #it's important to write the csv and reload it to remove the default number column added by R. 
+```
+##################################################
+## STEP THREE: Organize dataset into a bed file ##
+##################################################
+The first three fields in each feature line are required:
+
+chrom - name of the chromosome or scaffold. Any valid seq_region_name can be used, and chromosome names can be given with or without the 'chr' prefix.
+chromStart - Start position of the feature in standard chromosomal coordinates (i.e. first base is 0).
+chromEnd - End position of the feature in standard chromosomal coordinates
+
+For this, I need to reorganize the columns in my file:
+
+```{r}
+dat <- read.csv ("FINISHED_WHOLEGENOME_RECRATEbelow0.2_Sept23_2020_new.csv", header=TRUE)
+df = subset(dat, select = -c(X.1,X,weight_for3weights,mean_recombinationrate_in_window,label)) #remove non-bedfile columns
+df2 <- df[,c(3,1,2)] #reorder the columns
+write.table(df2, file = "FINISHED_WHOLEGENOMEbelow0.2_Sept23_new.bed", sep = "\t")
+```
+#####################################################
+## STEP FOUR: Format the bedfile to make it proper ##
+#####################################################
+```
+sed 's/\"//g' FINISHED_WHOLEGENOMEbelow0.2_Sept23_new.bed > FINISHED_WHOLEGENOMEbelow0.2_Sept23_new_fixed.bed #remove quotations
+cut -f2- FINISHED_WHOLEGENOMEbelow0.2_Sept23_new_fixed.bed > FINISHED_WHOLEGENOMEbelow0.2_Sept23_new_fixed2.bed #remove first column and first row
+sed 's/^chr//' FINISHED_WHOLEGENOMEbelow0.2_Sept23_new_fixed2.bed > FINISHED_WHOLEGENOMEbelow0.2_Sept23_new_fixed3.bed #remove chr prefix to match the vcf file
+#I then used vim to add chr column name 
+tr ' ' \\t < FINISHED_chrX_below0.2_fixed4.bed > FINISHED_chrX_below0.2_fixed4_tab.bed #if I need to make the bed file tab delimited
+```
+#######################################################
+## STEP FIVE: Extract low recombination rate regions ##
+#######################################################
+``
+module load bedtools
+
+bedtools intersect -a /home/hennelly/projects/ZachSNPcalling/Feb272020/callsnps/script9/Wildcanids_nodogsredwolf_minQ30_noindels_noparalogs_geno0.1_autosomes.vcf -b /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/datasets/FINISHED_WHOLEGENOMEbelow0.2_fixed3.bed -header > /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/finisheddataset/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2.vcf
+```
+#######################################
+## STEP SIX: Convert vcf to mvf file ##
+#######################################
+```
+module load bio3
+
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertVCF2MVF --vcf /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/finisheddataset/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2.vcf --out /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/finisheddataset/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2.mvf
+```
+###########################################
+## STEP SEVEN: Convert MVF to FASTA file ##
+###########################################
+```
+module load bio3
+
+python3 /home/hennelly/bin/mvftools/mvftools.py ConvertMVF2Fasta --mvf /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/finisheddataset/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2.mvf --out /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/finisheddataset/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2.fasta
+```
+################################################
+Adjust fasta file to put outgroup on first line
+################################################
+I can use vim and use yy as copy the whole line and p to paste. I will also need to remove the >REF line. 
+
+################################################
+Running IQTree
+################################################
+```
+~/bin/iqtree-1.6.12-Linux/bin/iqtree -s  /home/hennelly/projects/Twisst/March132020/RecRateanalysis_Sept21_2020/autosometree_models/Wildcanids_nodogsredwolves_minQ30_noindels_noparalogs_geno0.1_autosomes_recratebelow0.2_formodel.fasta -bb 1000 -nt AUTO -m TVM+F+R2 
+```                                 
