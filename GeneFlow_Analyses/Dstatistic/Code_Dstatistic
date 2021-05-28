@@ -1,0 +1,177 @@
+                     ########################################################################################
+                     ######################### Analysis and Figures the D statistic  ########################
+                     ########################################################################################
+
+I used the program Admixtools to infer the D statistic (Patterson et al. 2012). I liked using Admixtools because it allows the user to specifically write the comparisons that were of interest. 
+To obtain the correct format, I ended up needing to change my files into EIGENSTRAT format using COVERTF.
+
+N. Patterson, P. Moorjani, Y. Luo, S. Mallick, N. Rohland, Y. Zhan, T. Genschoreck, T. Webster, D. Reich, Ancient admixture in human history. Genetics 192: 1065-1093 (2012). 
+
+This analysis is in the directory: /home/hennelly/projects/f4Statistic/Dstat/scripts/
+
+
+                                    ###########################################
+                                    ###########################################
+                                    ## Coverting to the proper input format ###
+                                    ###########################################
+                                    ###########################################
+
+Admixtools needs the specific EIGENSTRAT format. 
+#####################################################
+####Step One: convert bed/bim file to a ped file ####
+#####################################################
+For my input file, I have only wolves with Dhole as an outgroup, minQ score of 30, filtered out indels and paralogs, geno 0.1
+```
+plink --bfile /home/hennelly/projects/f4Statistic/databases/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes --out WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes  --const-fid 0 --dog --allow-extra-chr --recode
+```
+#######################################################
+#### Step Two: convert ped file to eigenstrat file ####
+#######################################################
+First, I need to format the map file. For running convertf, I need to alter the map file because Admixtools doesn't work for having non-human chromosome numbers. 
+I also ended up changing chromosome X to just 1 when I ran chromosome X by itself. 
+```
+ awk '{$1=1 ; print ;}' /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_chrX.map > /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_chrX_3.map 
+```
+Next, I need to make a parameter file for converting my ped file to the required EIGENSTRAT format. 
+```
+touch par.filePED2EIGEN_autosomes
+
+genotypename:    /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.ped
+snpname:         /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.map
+indivname:       /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.ped
+outputformat:    EIGENSTRAT
+genotypeoutname: /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.eigenstratgeno
+snpoutname:      /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.snp
+indivoutname:    /mnt/steelhead/remote/Data_Shared/20180510_LaurensWolves/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.ind
+familynames:     NO
+numchrom: 38
+```
+##################################
+#### Step Three: run CONVERTF ####
+##################################
+A quick side note. I actually couldn't get convertf to work when I downloaded the program in Farm.
+I ended up having an old copy from ~2017 or 2018 on Dingo, which I then moved into my bin directory and it worked.
+```
+./convertf -p par.filePED2EIGEN_autosomes
+```
+
+                                    ####################################
+                                    ####################################
+                                    ## Running qpDstat in Admixtools ###
+                                    ####################################
+                                    ####################################
+
+#########################################################
+#### Step One: Add population names in the .ind file ####
+#########################################################
+Note: I ended up having to change the third column of the .ind file to show the population assignments. I ended up just doing 'vim' and writing them in with a tab. 
+
+```
+BH123_sorted_proper_nodups U        Indian
+BH124_sorted_proper_nodups U        Indian
+BH126_sorted_proper_nodups U        Indian
+BH1_sorted_proper_nodups U        Ladakh
+BH4_sorted_proper_nodups U        Ladakh
+BH6_sorted_proper_nodups U        Ladakh
+SRR1061818_sorted_proper_nodups U        Dog
+SRR1061963_sorted_proper_nodups U        Dog
+SRR1061964_sorted_proper_nodups U        Dog
+SRR1518518_sorted_proper_nodups U        Iran
+SRR2827600_sorted_proper_nodups U        EastAsian
+SRR2827601_sorted_proper_nodups U        CentralAsian
+SRR2827603_sorted_proper_nodups U        EastAsian
+SRR2827609_sorted_proper_nodups U        CentralAsian
+SRR2827611_sorted_proper_nodups U        CentralAsian
+SRR5168998_sorted_proper_nodups U        EastAsian
+SRR7107645_sorted_proper_nodups U        CentralAsian
+SRR7107646_sorted_proper_nodups U        EastAsian
+SRR7107647_sorted_proper_nodups U        CentralAsian
+SRR7107786_sorted_proper_nodups U        NorthAmerican
+SRR7107906_sorted_proper_nodups U        Tibetan
+SRR7107907_sorted_proper_nodups U        Qinghai
+SRR7107908_sorted_proper_nodups U        EastAsian
+SRR7107909_sorted_proper_nodups U        CentralAsian
+SRR7107910_sorted_proper_nodups U        Qinghai
+SRR7107911_sorted_proper_nodups U        CentralAsian
+SRR7107912_sorted_proper_nodups U        Tibetan
+SRR7107913_sorted_proper_nodups U        EastAsian
+SRR8049189_sorted_proper_nodups U        Dhole
+SRR8049193_sorted_proper_nodups U        Arabian
+SRR8049194_sorted_proper_nodups U        Arabian
+SRR8049197_sorted_proper_nodups U        NorthAmerican
+SRR8066602_sorted_proper_nodups U        NorthAmerican
+SRR8066605_sorted_proper_nodups U        NorthAmerican
+```
+
+####################################################################################
+#### Step Two: Write the popfile for the population combinations I want to test ####
+####################################################################################
+```
+touch popfile
+
+NorthAmerican Arabian Indian Dhole
+NorthAmerican EastAsian Indian Dhole
+NorthAmerican CentralAsian Indian Dhole
+NorthAmerican Ladakh Indian Dhole
+NorthAmerican Qinghai Indian Dhole
+NorthAmerican Tibetan Indian Dhole
+EastAsian Arabian Indian Dhole
+CentralAsian Arabian Indian Dhole
+Ladakh Arabian Indian Dhole
+Qinghai Arabian Indian Dhole
+EastAsian CentralAsian Indian Dhole
+NorthAmerican EastAsian Ladakh Dhole
+NorthAmerican CentralAsian Ladakh Dhole
+NorthAmerican Arabian Ladakh Dhole
+NorthAmerican Indian Ladakh Dhole
+NorthAmerican EastAsian Qinghai Dhole
+NorthAmerican CentralAsian Qinghai Dhole
+NorthAmerican Arabian Qinghai Dhole
+NorthAmerican Indian Qinghai Dhole
+NorthAmerican EastAsian Tibetan Dhole
+NorthAmerican CentralAsian Tibetan Dhole
+NorthAmerican Arabian Tibetan Dhole
+NorthAmerican Indian Tibetan Dhole
+```
+####################################################
+#### Step Three: Write the final parameter file ####
+####################################################
+Note: for the X chromosome, I was able to change the jackknife block sizes to account for higher linkage. 
+```
+genotypename:  /home/hennelly/projects/f4Statistic/databases/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.eigenstratgeno
+snpname: /home/hennelly/projects/f4Statistic/databases/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.snp
+indivname: /home/hennelly/projects/f4Statistic/databases/WolvesandDhole_minQ30_noindels_noparalogs_geno0.1_autosomes.ind
+popfilename:   popfile_specific 
+## optional parameter  
+f4mode:   YES 
+printsd:  YES
+## default NO 
+## f4 statistics not D-stats are computed
+```
+
+##############################################
+#### Step Four: Run qpDstat in Admixtools ####
+##############################################
+I will get an output that has the D statistic, standard deviation, Z score, number of ABBA, BABA and the total number of SNPs. 
+```
+/home/hennelly/bin/qpDstat2 -p parfile_chrX >logfile_chrX_qpDstat_withsd.txt
+```
+After this output, I moved it to my desktop to plot in R locally: 
+```
+scp  -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/f4Statistic/Dstat/scripts/logfile_autosomes_qpDstat_withsd_Holarcticwolf.txt ~/Desktop
+```
+ 
+                                    #################################
+                                    #################################
+                                    ## Plotting Final Figure in R ###
+                                    #################################
+                                    #################################
+```{r}
+dat <- read.csv ("Dstatistics_Autosomes_Aug23_2020.csv", header=TRUE)
+
+pdf ("Dstat_Auto_Aug23_2.pdf", height=6, width=6)
+p <- ggplot (dat, aes(x=P2, y=D.statistic, fill=as.factor(P3))) + geom_bar(stat="identity",colour="black", width = .6) + theme_classic() + scale_fill_manual(values=c("dodgerblue", "khaki", "lightsalmon", "orange2", "lightsalmon3", "olivedrab2")) + geom_errorbar(aes(ymin=D.statistic-SD, ymax=D.statistic+SD), width=.2,
+                 position=position_dodge(.9)) + guides(fill=FALSE)
+p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+dev.off()
+```
