@@ -12,5 +12,5 @@ The **Phylogenomics** folder contains the scripts and results for inferring the 
 
 The **TopologyweightAnalysis** folder contains the scripts and results for inferring Topology weights using Twisst and inferring the distributions of topology weights. 
 
-The **Recombination_Analysis** folder contains scripts and results for inferring the recombination rates based from the Dog Genome and inferring the autosomal and X chromosome phylogeny from low recombination regions. 
+The **Recombination_Analysis** folder contains scripts and results for inferring the recombination rates based from the domestic dog genome and inferring the autosomal and X chromosome phylogeny from low recombination regions. 
 
