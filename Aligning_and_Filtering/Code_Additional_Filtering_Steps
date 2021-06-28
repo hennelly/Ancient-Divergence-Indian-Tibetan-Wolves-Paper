@@ -173,7 +173,7 @@ Once I have the mean depth per site for the WGS data (.ldepth file), I can now p
                 ############# Step Five: Plotting ###############
                 #################################################
                 
-  > pdf("persitedepth_for_samples_06032020.pdf")
+  > pdf("persitedepth_for_samples_06282020.pdf")
   > plot(bins3, main="Depth per Site for WGS samples", 
   ylab="amount of sites within depth bin "
   ,col="bisque")
@@ -183,7 +183,7 @@ Once I have the mean depth per site for the WGS data (.ldepth file), I can now p
 
 To view the graph, I will need to move it into my computer.
 
-After looking viewing this graph, I decided to cut off at 850 overall mean max depth. I also got a second opinion by Ben Sacks on cutting it off at 850 mean depth
+After looking viewing this graph, I decided to cut off at 1200 overall mean max depth. I also got a second opinion by Ben Sacks on cutting it off at 850 mean depth
 per site for all individuals. 
                                     
                         ######## Step Three: Filter by setting mean max depth per site  #######
