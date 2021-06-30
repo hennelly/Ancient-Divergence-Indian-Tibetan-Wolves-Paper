@@ -3,12 +3,12 @@
                      ######################### Analysis for mtDNA phylogenetic trees #######################
                      #########################################################################################
 
-Farm Directory: /home/hennelly/projects/Mitogenome_Aug52020
+The code below consists of the steps I used for the mtDNA phylogenetic analyses. I used Beast v1.10.4 to construct the phylogenetics. 
 
-Fasta file of the two mitogenome datasets I used for final analyses: 
+The fasta file of the two mitogenome datasets I used for final analyses: 
 
-All samples with all positions except Dloop: /home/hennelly/projects/Mitogenome_Aug52020/script/canids_AWD_August52020_withoutDloop_noancientwolves_aligned.fasta
-3rd codon positions: /home/hennelly/projects/Mitogenome_Aug52020/codingregions/3rdposition/canids_AWD_August52020_withoutDloop_3rdposition_combined.fasta
+All samples with all positions except Dloop: /home/hennelly/projects/Mitogenome_Aug52020/FINAL_MITOGENOME_DATASET_JAN152021/canids_AWD_August52020_aligned_adjusted_withoutDloop_aligned_edited_FINALUSEDINMANUSCRIPT_reducedsamples.fasta
+3rd codon positions to estimate divergence times: /home/hennelly/projects/Mitogenome_Aug52020/codingregions_Jan132021/3rdposition/canids_Jan142021_withoutDloop_3rdposition_combined_final.fasta
 
                                     ##########################################
                                     ##########################################
@@ -17,15 +17,15 @@ All samples with all positions except Dloop: /home/hennelly/projects/Mitogenome_
                                     ##########################################
 
 
-After creating the fasta file with adding all the individual mitogenomes, these mitogenomes now need to be aligned. I used muscle3.8.31_i86linux64 to align. 
+After creating the fasta file with adding all the individual mitogenomes, these mitogenomes now need to be aligned. I used MUSCLE v3.8.31 muscle3.8.31_i86linux64 to align. 
 ```
-#### Move to Farm ####
+#### 1st step: Move to Farm ####
 rsync -avz -e "ssh -p 2022" --progress ~/Desktop/canids_AWD_August52020_withoutDloop_noancientwolves.fasta hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/alignedfasta
 
-#### Align with muscle ####
-~/bin/muscle3.8.31_i86linux64 -in canids_AWD_August52020_withoutDloop_noancientwolves.fasta -out canids_AWD_August52020_withoutDloop_noancientwolves_aligned.fasta
+#### 2nd step: Align with muscle ####
+/home/hennelly/bin/muscle3.8.31_i86linux64 -in canids_AWD_August52020_withoutDloop_noancientwolves.fasta -out canids_AWD_August52020_withoutDloop_noancientwolves_aligned.fasta
 ```
-#### Move back to desktop ####
+#### 3rd step: Move back to desktop ####
 ```
 scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/script/canids_AWD_August52020_aligned_adjusted_withoutDloop_aligned.fasta ~/Desktop
 ```
@@ -37,11 +37,14 @@ were present in the reference fasta (the domestic dog and Ben's African wild dog
                                     ## Step two: Partitioning the mitogenomes into coding and noncoding regions  ###
                                     ################################################################################
                                     ################################################################################
-I used ClustalX to create new multi-sample fasta with a specific range of sequence length from the whole mitogenome files. The non-coding (tRNA, rRNA) and coding regions 
-of the Canis lupus mitogenome I used are from Kim et al. dog mitogenome with NCBI reference NC_002008.4.
+                                    
+I used ClustalX 2.1 to create new multi-sample fasta with a specific range of sequence length from the whole mitogenome files, which excluded the Dloop region. For partitioning
+the mitogenome, I used the non-coding (tRNA, rRNA) and coding regions of the domestic dog mitogenome from Kim et al. with NCBI reference NC_002008.4.
 
 Kim KS, Lee SE, Jeong HW, Ha JH. 1998. The complete nucleotide sequence of the domestic dog (Canis familiaris) mitochondrial genome. Mol. Phylogenet. Evol. 10(2):210-220
 
+Here are the positions of the non codign and coding regions: 
+```
 tRNA 1-69 (tRNA1)
 rRNA 70-1023 (rRNA1)
 tRNA 1024-1090 (tRNA2)
@@ -78,7 +81,7 @@ ND6 13582-14109 (ND6)
 tRNA 14110-14178 (tRNA20)
 CYTB 14183-15322 (CYTB)
 tRNA 15323-15437 (tRNA21)
-
+```
 
 
                                     #########################################################
@@ -86,17 +89,18 @@ tRNA 15323-15437 (tRNA21)
                                     ## Step Three: Extracting the 1st, 2nd, and 3rd codon ###
                                     #########################################################
                                     #########################################################
+For this step three, I extracted the 1st, 2nd, and 3rd codons, as well as the non coding regions within Unix. Its a bit tedious, but the script works well. 
 #################
-### Step One ####
+### Step 3.1 ####
 #################
-I extracted the 1st, 2nd, and 3rd codons using unix. First, I need to move my sequences into farm.
+First, I need to move my sequences into farm.
 ```
 rsync -avz -e "ssh -p 2022" --progress ~/Desktop/canids_AWD_August52020_withoutDloop_ND5.fasta hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/codingregions/ND5
 ```
 #################
-### Step Two ####
+### Step 3.2 ####
 #################
-I need to linearlize my multifasta, which I can do the code below in unix.
+Next, I need to linearlize my multifasta, which I can do the code below in unix.
 ```
 1.) Linearize multiline fasta
 
@@ -113,9 +117,9 @@ sed -e 'y/\t/\n/' canids_AWD_August52020_withoutDloop_ND5_linear.fasta > canids_
 sed '/^$/d' canids_AWD_August52020_withoutDloop_ND5_linear2.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final.fasta
 ```
 
-###################
-### Step Three ####
-###################
+#################
+### Step 3.3 ####
+#################
 In order to just remove specific codons from the sequences, I need to remove and save the names of the sequences into another file. After I extract the codon positions, I can 
 then paste back the names of each sequence. The NR % 2 command in unix copy and pastes every other line into a new file. To grab the names of the sequences, I need to add a 
 extra line in the original file.
@@ -129,10 +133,10 @@ awk 'NR % 2 == 0' canids_AWD_August52020_withoutDloop_ND5_linear_Final.fasta > c
 awk 'NR % 2 == 0' canids_AWD_August52020_withoutDloop_ND5_linear_Final.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final_names.fasta #save sequences in another file
 ```
 
-###################
-### Step Four ####
-###################
-Extract every nth position in the sequences. I will need to extract one position and then delete the next two positions across all lines. For example, if the sequence was 
+#################
+### Step 3.4 ####
+#################
+The script below is used to extract every nth position in the sequences. Because the codons are triplets and coded as every 3rd position, overall I will need to extract one position and then delete the next two positions across all lines. For example, if the sequence was 
 GRAYWOLF, I will need to remove RA, WO, F to keep only the 1st letter (G) and then skip two letters and keep the third letter (GYL). For extracting the 2nd and 3rd codon positions, 
 I ended up cutting the first character of each line for grabbing 2nd codon positions, and then cut the first two characters to grab the 3rd codon positions. 
 ```
@@ -148,20 +152,20 @@ sed 's/\(.\{1\}\)\(.\{2\}\)/\1/g' canids_AWD_August52020_withoutDloop_ND5_linear
 sed 's/\(.\{1\}\)\(.\{2\}\)/\1/g' canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_nofirstandsecondline.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_3rdposition_FINISHED.fasta #keeps the first position of each line and deletes the next two position for each line of the whole file. 
 ```
 
-##################
-### Step Five ####
-##################
- I need to paste together the names file and sequence files in every other row: 
+#################
+### Step 3.5 ####
+#################
+Finally, I need to paste together the names file and sequence files in every other row: 
 ```
 paste -d \\n canids_AWD_August52020_withoutDloop_ND5_linear_Final_names.fasta canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_1stposition_FINISHED.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_1stposition_FINISHED_namesandsequences.fasta
 paste -d \\n canids_AWD_August52020_withoutDloop_ND5_linear_Final_names.fasta canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_2ndposition_FINISHED.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_2ndposition_FINISHED_namesandsequences.fasta
 paste -d \\n canids_AWD_August52020_withoutDloop_ND5_linear_Final_names.fasta canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_3rdposition_FINISHED.fasta > canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta
 ```
 
-##################
-### Step Six ####
-##################
-I need to cat all files together to prepare to merge each of the protein sequences into one multifasta file.
+#################
+### Step 3.6 ####
+#################
+Next, I need to cat all files together to prepare to merge each of the protein sequences into one multifasta file.
 ```
 cat canids_AWD_August52020_withoutDloop_ATP6_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ATP8_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_COX1_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_COX2_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_COX3_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_CYTB_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND1_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND2_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND3_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND4_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND4L_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta canids_AWD_August52020_withoutDloop_ND5_linear_Final_sequences_3rdposition_FINISHED_namesandsequences.fasta > canids_AWD_August52020_withoutDloop_3rdposition.fasta 
 
@@ -172,9 +176,9 @@ cat canids_AWD_August52020_withoutDloop_ATP6_linear_Final_sequences_1stposition_
 cat canids_AWD_August52020_withoutDloop_ND6complement.fasta canids_AWD_August52020_withoutDloop_rRNA2.fasta canids_AWD_August52020_withoutDloop_rRNA3.fasta canids_AWD_August52020_withoutDloop_tRNA10.fasta canids_AWD_August52020_withoutDloop_tRNA11.fasta canids_AWD_August52020_withoutDloop_tRNA12.fasta canids_AWD_August52020_withoutDloop_tRNA13.fasta canids_AWD_August52020_withoutDloop_tRNA14.fasta canids_AWD_August52020_withoutDloop_tRNA16.fasta canids_AWD_August52020_withoutDloop_tRNA17.fasta canids_AWD_August52020_withoutDloop_tRNA18.fasta canids_AWD_August52020_withoutDloop_tRNA1.fasta canids_AWD_August52020_withoutDloop_tRNA20.fasta canids_AWD_August52020_withoutDloop_tRNA21.fasta canids_AWD_August52020_withoutDloop_tRNA22.fasta canids_AWD_August52020_withoutDloop_tRNA2.fasta canids_AWD_August52020_withoutDloop_tRNA4.fasta canids_AWD_August52020_withoutDloop_tRNA5.fasta canids_AWD_August52020_withoutDloop_tRNA6.fasta canids_AWD_August52020_withoutDloop_tRNA7.fasta canids_AWD_August52020_withoutDloop_tRNA8.fasta canids_AWD_August52020_withoutDloop_tRNA9.fasta > canids_AWD_August52020_noncoding.fasta
 ```
 
-###################
-### Step Seven ####
-###################
+#################
+### Step 3.7 ####
+#################
 Finally, I can paste the sequences of each protein file into one line, determined by having identical names of sequences:
 ```{r}
 perl -nle '/^>/?($n=$_):($s{$n}.=$_);}{print"$_\n$s{$_}"for keys%s' canids_AWD_August52020_withoutDloop_3rdposition.fasta > canids_AWD_August52020_withoutDloop_3rdposition_combined.fasta 
@@ -199,25 +203,60 @@ Move 3rd position to desktop
 ```
 scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/codingregions/3rdposition/canids_AWD_August52020_withoutDloop_3rdposition_combined.fasta ~/Desktop
 ```
-I used the parameters: 
 
-Birth Death model, relaxed lognormal clock, normal prior on African wild dog
+I used the parameters below to generate the BEAUTI file on the Beast version 1 gui within my local computer: 
+
+-- "Speciation:Birth-Death Process" for the tree prior, 
+-- relaxed lognormal clock, 
+-- We used the same partition scheme and substitution models previously determined for gray wolves: HKY+1 for 1st codon and non-coding, TN93+1 for 2nd codon position, and TN93 + G for 3rd codon position (Loog et al. 2020)
+-- For the 3rd codon tree, we used a normal prior for the TMRCA of the African wild dog at 3.9 Ma (SD=0.3Ma) based on previous fossil and genetic analyses (Chavez et al. 2019). 
+-- Each analylsis was run for 50 million MCMC cycles, sampling every 5,00 and discarding the first 5 million states as burnin
+-- Parameter kappa1: logNormal [1,1.25], initial=2
+-- Parameter kappa2: logNormal [1,1.25], initial=2
+-- Parameter frequencies: Uniform [0,1], initial=0.25
+-- Parameter alpha: exponential [0.5], initial=0.5
+-- Parameter ucld.stdev: Exponential [0.333333], initial=0.3333333
+-- Parameter ucld.mean: LogNormal [-18.42068, 1.5], initial=1
+-- Parameter treeModel.rootHeight: Normal [3.7E6,3E5] in [1.9E6, 8E6], initial =4E6
+-- Parameter birthDeath.meanGrowthRate: Uniform [0,1E5], initial = 820
+-- Parameter birthDeath.relativeDeathRate: Uniform [0,1], initial 0.5
+-- Parameter meanRate: Indirectly specified through other Parameters 
+-- Parameter covariance: Indirectly specified through other Parameters 
+-- Parameter coefficientOfVariation: Indirectly specified through other Parameters
+
+After generating the Beauti file, I then transfered the Beauti file to Farm: 
 ```
 rsync -avz -e "ssh -p 2022" --progress ~/Desktop/canids_AWD_3rdposition_10millionMCMC_lognormalprior_TN93_noancientwolves.xml hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/BEAST
 ```
+###########################################################
+### Step Two: Run BEAST with BEAUTI file on the cluster ###
+###########################################################
+First, I need to create a conda environment and load the program beastie2. Below, I use `conda activate` to load the conda environment containing Beat. 
 
-Run beast on the cluster. 
-
-conda activate beastie2:
+conda activate beastie1:
 
 ```
-conda init beastie2
+#!/usr/bin/env bash
+#SBATCH --job-name=beast
+#SBATCH --time 24:00:00
+#SBATCH --mem=15GB
+#SBATCH -p high
+#SBATCH -o beast.out
+#SBATCH -o beast.err
+#SBATCH --exclude=c10-96,c10-69,c11-76,c11-93,c11-86
+
+conda init beastie1
 
 beast canids_AWD_3rdposition_10millionMCMC_lognormalprior_TN93_noancientwolves.xml
 ```
 
-Move results to my desktop"
+Finally, I can move the results to my desktop 
 ```
 scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/BEAST/10millionMCMC_normalprior_noancientwolves/canids_AWD_August52020_withoutDloop_3rdposition_noancientwolves_combined.trees ~/Desktop
 ```
-scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/projects/Mitogenome_Aug52020/BEAST/Z_BEAST1_norepeatsamples_3rdposition_50millionMCMC/ZZZ_canids_AWD_August132020_3rdposition_withoutDloop_noancientwolves_norepeatedsamples_50MCMC.FINALTREE.txt ~/Desktop
+######################################################
+### Step Three: Check output on Tracer and Figtree ###
+######################################################
+
+With the output on my local computer, I then checked the Beast run with Tracer and Figtree. 
+
