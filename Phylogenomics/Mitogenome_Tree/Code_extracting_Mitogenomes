@@ -1,0 +1,132 @@
+                     ################################################################################################
+                     ################################################################################################
+                     ######################### Extracting Mitogenomes for the mtDNA analysis ########################
+                     ################################################################################################
+                     ################################################################################################
+
+For extracting the mitogenomes, I used the program (1) Novoplasty and a (2) bwa script. This was due to Novoplasty failing to extract a subset of the mitogenomes from the fq files. 
+If mitogenomes were able to be recovered, I used the Novoplasty mitogenomes. Otherwise, I checked visually using ClustalX and Sequencher the recovered mitogenomes from Novoplasty and
+the bwa script to ensure they were concordant. 
+
+                                    #####################################################################
+                                    ## First Method: NOVOPlasty version 3.8.3 (Dierckxsen et al. 2016 ###
+                                    #####################################################################
+
+### STEP ONE: make a consensus file ###
+
+Project:
+-----------------------
+Project name          = SRR8066610
+Type                  = mito
+Genome Range          = 12000-22000
+K-mer                 = 39
+Max memory            = 20
+Extended log          = 0
+Save assembled reads  = yes
+Seed Input            = /home/hennelly/projects/Novoplasty/mitoref/CanislupusMitoREF.fa
+Extend seed directly  = no
+Reference sequence    = /home/hennelly/projects/Novoplasty/mitoref/CanislupusMitoREF.fa
+Variance detection    = yes
+Heteroplasmy          = 
+HP exclude list       =
+Chloroplast sequence  = 
+
+Dataset 1:
+-----------------------
+Read Length           = 151
+Insert size           = 300
+Platform              = illumina
+Single/Paired         = PE
+Combined reads        =
+Forward reads         = /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/SRR8066610_1_val_1.fq.gz
+Reverse reads         = /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/SRR8066610_2_val_2.fq.gz
+
+Optional:
+-----------------------
+Insert size auto      = yes
+Insert Range          = 1.6
+Insert Range strict   = 1.2
+Use Quality Scores    = no
+
+```
+
+### STEP TWO: Run novoplasty using the consensus file ###
+
+To run an array, I ended up manually making a config file for each sample and named them config_sampleID.txt. Here's the script to pull out the mitogenomes in an array:
+
+```
+#!/bin/bash -l
+#SBATCH --job-name=novoplasty
+#SBATCH --array=1-47
+#SBATCH --nodes 1
+#SBATCH --ntasks 1
+#SBATCH --time 12:00:00
+#SBATCH --mem=8GB
+#SBATCH -p med
+#SBATCH -o /home/hennelly/projects/Novoplasty/slurmout/novoplasty%A_%a.out
+#SBATCH -e /home/hennelly/projects/Novoplasty/slurmout/novoplasty%A_%a.err
+#SBATCH --exclude=c10-96,c10-69,c11-76
+
+echo "My SLURM_ARRAY_TASK_ID: " $SLURM_ARRAY_TASK_ID
+
+sample=$(sed "${SLURM_ARRAY_TASK_ID}q;d" samplelist.txt)
+echo ${sample}
+
+perl /home/hennelly/bin/Novoplasty_updated/NOVOPlasty/NOVOPlasty3.8.3.pl -c /home/hennelly/projects/Novoplasty/config09032020/config_${sample}.txt > ~/projects/Novoplasty/output09032020/${sample}_mitogenome.log
+```                                    
+                                    
+                                    #########################
+                                    ## Second Method: BWA ###
+                                    #########################                                   
+ 
+#### Step One: Align to the mitochondrial reference ####
+For this, I needed to index the reference mitogenome I used to align my whole genome samples to and use the reference mitogenome in bwa mem. 
+
+```
+#!/bin/bash -l
+#SBATCH -p med
+#SBATCH -t 20:00:00   
+#SBATCH --mem=10G
+#SBATCH -o /home/hennelly/projects/Novoplasty/BWAalignment/slurmout/BH126.out
+#SBATCH -e /home/hennelly/projects/Novoplasty/BWAalignment/slurmout/BH126.err
+#SBATCH --exclude=c10-96,c10-69,c11-76
+
+module load bwa
+
+bwa index ~/projects/Novoplasty/mitoref/CanislupusMitoREF.fa
+
+bwa mem /home/hennelly/projects/Novoplasty/mitoref/CanislupusMitoREF.fa /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/BH126_L4_1_val_1.fq.gz /home/hennelly/fastqfiles/trimmedFastq/trimmedfastq/BH126_L4_2_val_2.fq.gz > BH126_mitogenome.sam
+
+samtools view -b BH126_mitogenome.sam | samtools sort - > BH126_mitogenome.bam
+
+picard-tools MarkDuplicates I=BH126_mitogenome.bam O=BH126_mitogenome._nodup.bam M=Metrics
+
+samtools rmdup BH126_mitogenome._nodup.bam BH126_mitogenome.bam
+
+samtools index BH126_mitogenome.bam
+
+rm BH126_mitogenome.sam BH126_mitogenome._nodup.bam
+```
+ 
+ #### Step two: create a fasta file ####
+
+The next step is then to create a fasta file of the bam file output from the step above:
+
+```
+#!/usr/bin/env bash
+#SBATCH --job-name=fasta
+#SBATCH --nodes 1
+#SBATCH --time 28:00:00
+#SBATCH --mem=5GB
+#SBATCH -o Mouse1.out
+#SBATCH -p high
+#SBATCH --exclude=c10-96,c10-69,c11-76,c11-93
+
+
+module load samtools
+
+module load bcftools 
+
+samtools mpileup -uf /home/hennelly/projects/Novoplasty/mitoref/CanislupusMitoREF.fa Mouse1_mitogenome.bam | bcftools call -c | vcfutils.pl vcf2fq > Mouse1_mitogenome.fa
+```
+ 
