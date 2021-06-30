@@ -14,7 +14,6 @@ The **TopologyweightAnalysis** folder contains the scripts and results for infer
 
 The **Recombination_Analysis** folder contains scripts and results for inferring the recombination rates based from the domestic dog genome and inferring the autosomal and X chromosome phylogeny from low recombination regions. 
 
-
 <center>
 <img src="/Aligning_and_Filtering/img/Wolf_Image.png" length="400" width="400">
 <center>
