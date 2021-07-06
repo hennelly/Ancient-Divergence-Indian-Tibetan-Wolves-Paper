@@ -1,6 +1,6 @@
 # Code for the Genomics of Basal Wolf Lineages Project
 
-This repository contains the code, some datasets and results for the manuscript "*Ancient divergence of Indian and Tibetan wolves revealed by recombination-aware phylogenomics*." in *Molecular Ecology*. 
+This repository contains the code, some datasets and results for the manuscript "*Ancient divergence of Indian and Tibetan wolves revealed by recombination-aware phylogenomics*" in *Molecular Ecology*. 
 
 The **Aligning_and_Filtering** folder contains scripts for the following categories: Trimming, alignment, calling SNPs using freebayes, additional filtering steps, and attaching the Y chromosome onto the Dog reference genome. 
 
