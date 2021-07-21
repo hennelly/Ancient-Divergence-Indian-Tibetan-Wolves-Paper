@@ -21,7 +21,7 @@ R2=$(sed "${SLURM_ARRAY_TASK_ID}q;d" trimgaloresamples_reverse.txt)
 module load fastqc 
 module load cutadapt echo ${sample}
 
-/home/hennelly/bin/TrimGalore-0.6.5/trim_galore --illumina --gzip - /home/hennelly/fastqfiles/trimmedFastq/ --paired /home/hennelly/fastqfiles/${R1} /home/hennelly/fastqfiles/${R2} 
+/home/hennelly/bin/TrimGalore-0.6.5/trim_galore --illumina --gzip -o /home/hennelly/fastqfiles/trimmedFastq/ --paired /home/hennelly/fastqfiles/${R1} /home/hennelly/fastqfiles/${R2} 
 ```
 
 
