@@ -71,25 +71,3 @@ dev.off()
 ```    
 
 
-#!/usr/bin/env bash
-#SBATCH --job-name=ldepth
-#SBATCH --nodes 1
-#SBATCH --ntasks 1
-#SBATCH --time 06:00:00
-#SBATCH --mem=8GB
-#SBATCH -o /home/hennelly/Pakistan_Graywolf_Genomics/SNPcalling/slurmout/ldepth.out
-#SBATCH -p high
-#SBATCH --exclude=c10-96,c10-69,c11-76,c11-93,c11-86
-
-module load vcftools 
-
-vcftools --vcf /home/hennelly/Pakistan_Graywolf_Genomics/SNPcalling/scripts2/All_Combined_minQ30_noindels.vcf --out /home/hennelly/Pakistan_Graywolf_Genomics/SNPcalling/scripts2/All_Combined_minQ30_noindels_depth --site-depth
-
-mv 1.1_paralogremoval_remove.sh /home/hennelly/Pakistan_Graywolf_Genomics/SNPcalling/scripts2
-
-pdf("persitedepth_for_samples_06282021.pdf")
-
-scp -P 2022 -r hennelly@farm.cse.ucdavis.edu:/home/hennelly/Pakistan_Graywolf_Genomics/SNPcalling/scripts2/persitedepth_for_samples_06282021.pdf ~/Desktop
-
-
-
