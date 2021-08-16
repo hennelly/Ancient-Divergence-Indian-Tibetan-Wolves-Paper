@@ -14,6 +14,8 @@ The **TopologyweightAnalysis** folder contains the scripts and results for infer
 
 The **Recombination_Analysis** folder contains scripts and results for inferring the recombination rates based from the domestic dog genome and inferring the autosomal and X chromosome phylogeny from low recombination regions. 
 
+The newly sequenced whole genome reads of 1 Asian golden jackal, 4 Indian wolves, and 2 Tibetan wolves used in this paper are available at the NCBI Sequence Read Archive (SRA) under the BioProject PRJNA736617 with Genbank Accession Nos SRR14777842- SRR14777848. The mitogenomes of 13 newly sequenced canids are available on NCBI under accession numbers MZ433367-MZ433379.
+
 <p align="center">
 <img src="/Aligning_and_Filtering/img/Wolf_Image.png" length="400" width="400">
 </p>
