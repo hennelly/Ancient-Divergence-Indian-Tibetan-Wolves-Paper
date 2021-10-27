@@ -4,9 +4,14 @@ The code below consists of the steps I used for the mtDNA phylogenetic analyses.
 
 The fasta file of the two mitogenome datasets I used for final analyses: 
 
-All samples with all positions except Dloop: /home/hennelly/projects/Mitogenome_Aug52020/FINAL_MITOGENOME_DATASET_JAN152021/canids_AWD_August52020_aligned_adjusted_withoutDloop_aligned_edited_FINALUSEDINMANUSCRIPT_reducedsamples.fasta
-3rd codon positions to estimate divergence times: /home/hennelly/projects/Mitogenome_Aug52020/codingregions_Jan132021/3rdposition/canids_Jan142021_withoutDloop_3rdposition_combined_final.fasta
-
+All samples with all positions except Dloop: 
+````
+/home/hennelly/projects/Mitogenome_Aug52020/FINAL_MITOGENOME_DATASET_JAN152021/canids_AWD_August52020_aligned_adjusted_withoutDloop_aligned_edited_FINALUSEDINMANUSCRIPT_reducedsamples.fasta
+```
+3rd codon positions to estimate divergence times:
+```
+/home/hennelly/projects/Mitogenome_Aug52020/codingregions_Jan132021/3rdposition/canids_Jan142021_withoutDloop_3rdposition_combined_final.fasta
+```
 
 The steps are below: 
 
